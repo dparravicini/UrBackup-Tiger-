@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 #include "tokens.h"
 #include <iostream>
 #include <fstream>
@@ -205,10 +206,10 @@ std::vector<std::string> get_user_groups(const std::string& username)
 
 	int ngroups = 0;
 
-	if(getgrouplist(utf8_username.c_str(), pw->pw_gid, group_ids.data(), &ngroups)==-1)
+	if(getgrouplist(utf8_username.c_str(), pw->pw_gid, tiger_vector_data(group_ids), &ngroups)==-1)
 	{
 		group_ids.resize(ngroups);
-		if(getgrouplist(utf8_username.c_str(), pw->pw_gid, group_ids.data(), &ngroups)==-1)
+		if(getgrouplist(utf8_username.c_str(), pw->pw_gid, tiger_vector_data(group_ids), &ngroups)==-1)
 		{
 			Server->Log("Error getting group ids for user with name \""+ username + "\"", LL_ERROR);
 			return std::vector<std::string>();

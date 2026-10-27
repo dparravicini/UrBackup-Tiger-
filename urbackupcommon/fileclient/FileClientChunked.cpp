@@ -1,3 +1,4 @@
+#include "../../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -2221,7 +2222,7 @@ void FileClientChunked::adjustOutputFilesizeOnFailure( _i64& filesize_out )
 						Server->Log("Error reading from chunkhashes file. Copying hashdata failed. "+os_last_error_str(), LL_ERROR);
 					}
 
-					writeFileRepeat(m_hashoutput, buffer.data(), read);	
+					writeFileRepeat(m_hashoutput, tiger_vector_data(buffer), read);	
 
 				} while (read==4096);
 

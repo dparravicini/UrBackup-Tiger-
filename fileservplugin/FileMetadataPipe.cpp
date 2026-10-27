@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -105,7 +106,6 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 	{
 		read_bytes = (std::min)(buf_avail, sizeof(unsigned int) - fn_off);
 		unsigned int fn_size = little_endian(static_cast<unsigned int>(public_fn.size()));
-		fn_size = little_endian(fn_size);
 		memcpy(buf, reinterpret_cast<char*>(&fn_size) + fn_off, read_bytes);
 		curr_checksum = urb_adler32(curr_checksum, reinterpret_cast<char*>(&fn_size) + fn_off, static_cast<_u32>(read_bytes));
 		fn_off+=read_bytes;
@@ -201,13 +201,13 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 			if(meta_data.getDataSize()+2*sizeof(unsigned int)<metadata_buffer.size())
 			{
 				unsigned int data_size = little_endian(static_cast<unsigned int>(meta_data.getDataSize()));
-				memcpy(metadata_buffer.data(), &data_size, sizeof(data_size));
-				memcpy(metadata_buffer.data()+sizeof(unsigned int), meta_data.getDataPtr(), meta_data.getDataSize());
+				memcpy(tiger_vector_data(metadata_buffer), &data_size, sizeof(data_size));
+				memcpy(tiger_vector_data(metadata_buffer)+sizeof(unsigned int), meta_data.getDataPtr(), meta_data.getDataSize());
 				metadata_buffer_size = meta_data.getDataSize()+sizeof(unsigned int);
 
-				curr_checksum = urb_adler32(curr_checksum, metadata_buffer.data(), static_cast<_u32>(metadata_buffer_size));
+				curr_checksum = urb_adler32(curr_checksum, tiger_vector_data(metadata_buffer), static_cast<_u32>(metadata_buffer_size));
 				unsigned int endian_curr_checksum = little_endian(curr_checksum);
-				memcpy(metadata_buffer.data()+metadata_buffer_size, &endian_curr_checksum, sizeof(endian_curr_checksum));
+				memcpy(tiger_vector_data(metadata_buffer)+metadata_buffer_size, &endian_curr_checksum, sizeof(endian_curr_checksum));
 				metadata_buffer_size+=sizeof(endian_curr_checksum);
 			}
 			else
@@ -221,7 +221,7 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 		if (metadata_buffer_size - metadata_buffer_off>0)
 		{
 			read_bytes = (std::min)(metadata_buffer_size - metadata_buffer_off, buf_avail);
-			memcpy(buf, metadata_buffer.data() + metadata_buffer_off, read_bytes);
+			memcpy(buf, tiger_vector_data(metadata_buffer) + metadata_buffer_off, read_bytes);
 			metadata_buffer_off += read_bytes;
 		}
 		if (metadata_buffer_size - metadata_buffer_off == 0)
@@ -335,7 +335,6 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 	{
 		read_bytes = (std::min)(buf_avail, sizeof(unsigned int) - fn_off);
 		unsigned int fn_size = little_endian(static_cast<unsigned int>(public_fn.size()));
-		fn_size = little_endian(fn_size);
 		memcpy(buf, reinterpret_cast<char*>(&fn_size) + fn_off, read_bytes);
 		curr_checksum = urb_adler32(curr_checksum, reinterpret_cast<char*>(&fn_size) + fn_off, static_cast<_u32>(read_bytes));
 		fn_off += read_bytes;
@@ -372,7 +371,7 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 
 		if (fn_off == sizeof(unsigned int))
 		{
-			int64* datasize = reinterpret_cast<int64*>(metadata_buffer.data());
+			int64* datasize = reinterpret_cast<int64*>(tiger_vector_data(metadata_buffer));
 			metadata_file_size = transmit_file->Size();
 			metadata_file_off = 0;
 			*datasize = little_endian(metadata_file_size);
@@ -388,7 +387,7 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 		if (metadata_buffer_size - metadata_buffer_off>0)
 		{
 			read_bytes = (std::min)(metadata_buffer_size - metadata_buffer_off, buf_avail);
-			memcpy(buf, metadata_buffer.data() + metadata_buffer_off, read_bytes);
+			memcpy(buf, tiger_vector_data(metadata_buffer) + metadata_buffer_off, read_bytes);
 			metadata_buffer_off += read_bytes;
 		}
 		if (metadata_buffer_size - metadata_buffer_off == 0)
@@ -421,7 +420,7 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 		if (metadata_file_off == metadata_file_size)
 		{
 			metadata_state = MetadataState_RawFileDataChecksum;
-			sha512_final(&transmit_file_ctx, reinterpret_cast<unsigned char*>(metadata_buffer.data()));
+			sha512_final(&transmit_file_ctx, reinterpret_cast<unsigned char*>(tiger_vector_data(metadata_buffer)));
 			metadata_buffer_size = SHA512_DIGEST_SIZE;
 			metadata_buffer_off = 0;
 		}
@@ -433,7 +432,7 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 		if (metadata_buffer_size - metadata_buffer_off>0)
 		{
 			read_bytes = (std::min)(metadata_buffer_size - metadata_buffer_off, buf_avail);
-			memcpy(buf, metadata_buffer.data() + metadata_buffer_off, read_bytes);
+			memcpy(buf, tiger_vector_data(metadata_buffer) + metadata_buffer_off, read_bytes);
 			metadata_buffer_off += read_bytes;
 		}
 		if (metadata_buffer_size - metadata_buffer_off == 0)
@@ -728,7 +727,7 @@ bool FileMetadataPipe::transmitCurrMetadata( char* buf, size_t buf_avail, size_t
 	if(metadata_buffer_size-metadata_buffer_off>0)
 	{
 		read_bytes = (std::min)(metadata_buffer_size-metadata_buffer_off, buf_avail);
-		memcpy(buf, metadata_buffer.data()+metadata_buffer_off, read_bytes);
+		memcpy(buf, tiger_vector_data(metadata_buffer)+metadata_buffer_off, read_bytes);
 		metadata_buffer_off+=read_bytes;
 		return true;
 	}
@@ -760,8 +759,8 @@ bool FileMetadataPipe::transmitCurrMetadata( char* buf, size_t buf_avail, size_t
 		data.addVarInt(file_information.ChangeTime.QuadPart);
 
 		_u32 data_size = little_endian(static_cast<_u32>(data.getDataSize()));
-		memcpy(metadata_buffer.data(), &data_size, sizeof(data_size));
-		memcpy(metadata_buffer.data()+sizeof(data_size), data.getDataPtr(), data.getDataSize());
+		memcpy(tiger_vector_data(metadata_buffer), &data_size, sizeof(data_size));
+		memcpy(tiger_vector_data(metadata_buffer)+sizeof(data_size), data.getDataPtr(), data.getDataSize());
 		metadata_buffer_size = data.getDataSize()+sizeof(data_size);
 		metadata_buffer_off=0;
 		return transmitCurrMetadata(buf, buf_avail, read_bytes);
@@ -771,7 +770,7 @@ bool FileMetadataPipe::transmitCurrMetadata( char* buf, size_t buf_avail, size_t
 	{
 		DWORD total_read = 0;
 		DWORD read;
-		BOOL b = BackupRead(hFile, reinterpret_cast<LPBYTE>(metadata_buffer.data()+1), metadata_id_size, &read, FALSE, TRUE, &backup_read_context);
+		BOOL b = BackupRead(hFile, reinterpret_cast<LPBYTE>(tiger_vector_data(metadata_buffer)+1), metadata_id_size, &read, FALSE, TRUE, &backup_read_context);
 
 		if(b==FALSE)
 		{
@@ -807,7 +806,7 @@ bool FileMetadataPipe::transmitCurrMetadata( char* buf, size_t buf_avail, size_t
 
 		metadata_buffer[0]=1;
 
-		WIN32_STREAM_ID* curr_stream = reinterpret_cast<WIN32_STREAM_ID*>(metadata_buffer.data()+1);
+		WIN32_STREAM_ID* curr_stream = reinterpret_cast<WIN32_STREAM_ID*>(tiger_vector_data(metadata_buffer)+1);
 
 		if(curr_stream->dwStreamNameSize>0)
 		{
@@ -816,7 +815,7 @@ bool FileMetadataPipe::transmitCurrMetadata( char* buf, size_t buf_avail, size_t
 				metadata_buffer.resize(3 + read + curr_stream->dwStreamNameSize);
 			}
 
-			b = BackupRead(hFile, reinterpret_cast<LPBYTE>(metadata_buffer.data()+1) + read, curr_stream->dwStreamNameSize, &read, FALSE, TRUE, &backup_read_context);
+			b = BackupRead(hFile, reinterpret_cast<LPBYTE>(tiger_vector_data(metadata_buffer)+1) + read, curr_stream->dwStreamNameSize, &read, FALSE, TRUE, &backup_read_context);
 
 			if(b==FALSE)
 			{
@@ -1078,8 +1077,8 @@ bool FileMetadataPipe::transmitCurrMetadata(char* buf, size_t buf_avail, size_t&
 
 
 		_u32 metadata_size = little_endian(static_cast<_u32>(data.getDataSize()));
-		memcpy(metadata_buffer.data(), &metadata_size, sizeof(_u32));
-		memcpy(metadata_buffer.data()+sizeof(_u32), data.getDataPtr(), data.getDataSize());
+		memcpy(tiger_vector_data(metadata_buffer), &metadata_size, sizeof(_u32));
+		memcpy(tiger_vector_data(metadata_buffer)+sizeof(_u32), data.getDataPtr(), data.getDataSize());
 		metadata_buffer_size=data.getDataSize()+sizeof(_u32);
 		metadata_buffer_off=0;
 		backup_state=BackupState_Stat;
@@ -1091,7 +1090,7 @@ bool FileMetadataPipe::transmitCurrMetadata(char* buf, size_t buf_avail, size_t&
 		if(metadata_buffer_size-metadata_buffer_off>0)
 		{
 			read_bytes = (std::min)(metadata_buffer_size-metadata_buffer_off, buf_avail);
-			memcpy(buf, metadata_buffer.data()+metadata_buffer_off, read_bytes);
+			memcpy(buf, tiger_vector_data(metadata_buffer)+metadata_buffer_off, read_bytes);
 			metadata_buffer_off+=read_bytes;
 		}
 		if(metadata_buffer_size-metadata_buffer_off==0)
@@ -1111,7 +1110,7 @@ bool FileMetadataPipe::transmitCurrMetadata(char* buf, size_t buf_avail, size_t&
 		CWData data;
 		data.addInt64(eattr_keys.size());
 
-		memcpy(metadata_buffer.data(), data.getDataPtr(), data.getDataSize());
+		memcpy(tiger_vector_data(metadata_buffer), data.getDataPtr(), data.getDataSize());
 		metadata_buffer_size=data.getDataSize();
 		metadata_buffer_off=0;
 		backup_state=BackupState_EAttr;
@@ -1123,7 +1122,7 @@ bool FileMetadataPipe::transmitCurrMetadata(char* buf, size_t buf_avail, size_t&
 		if(metadata_buffer_size-metadata_buffer_off>0)
 		{
 			read_bytes = (std::min)(metadata_buffer_size-metadata_buffer_off, buf_avail);
-			memcpy(buf, metadata_buffer.data()+metadata_buffer_off, read_bytes);
+			memcpy(buf, tiger_vector_data(metadata_buffer)+metadata_buffer_off, read_bytes);
 			metadata_buffer_off+=read_bytes;
 		}
 		if(metadata_buffer_size-metadata_buffer_off==0)

@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -302,7 +303,7 @@ bool RestoreDownloadThread::load_file_patch( SQueueItem todl )
 					for (int64 written = 0; written < sparse_extent.size;)
 					{
 						_u32 towrite = static_cast<_u32>((std::min)(sparse_extent.size - written, static_cast<int64>(zero_buf.size())));
-						_u32 w = todl.patch_dl_files.orig_file->Write(zero_buf.data(), towrite);
+						_u32 w = todl.patch_dl_files.orig_file->Write(tiger_vector_data(zero_buf), towrite);
 						if (w != towrite)
 						{
 							Server->Log("Error zeroing data in \"" + todl.patch_dl_files.orig_file->getFilename() + "\" after punching hole failed -2", LL_ERROR);

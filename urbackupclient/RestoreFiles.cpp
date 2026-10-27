@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -392,7 +393,7 @@ int64 RestoreFiles::calculateDownloadSize()
 
 	do 
 	{
-		read = filelist->Read(buffer.data(), static_cast<_u32>(buffer.size()));
+		read = filelist->Read(tiger_vector_data(buffer), static_cast<_u32>(buffer.size()));
 
 		for(_u32 i=0;i<read;++i)
 		{
@@ -467,7 +468,7 @@ bool RestoreFiles::downloadFiles(FileClient& fc, int64 total_size, ScopedRestore
 
 	do 
 	{
-		read = filelist->Read(buffer.data(), static_cast<_u32>(buffer.size()));
+		read = filelist->Read(tiger_vector_data(buffer), static_cast<_u32>(buffer.size()));
 
 		for(_u32 i=0;i<read && !has_error;++i)
 		{

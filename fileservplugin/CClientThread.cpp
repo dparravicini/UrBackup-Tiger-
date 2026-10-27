@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -935,7 +936,7 @@ bool CClientThread::ProcessPacket(CRData *data)
                 {
                     CWData data;
                     data.addUChar(ID_FILESIZE);
-                    data.addUInt64(little_endian(static_cast<uint64>(0)));
+                    data.addUInt64(static_cast<uint64>(0));
 
                     int rc=SendInt(data.getDataPtr(), data.getDataSize() );
                     if(rc==SOCKET_ERROR)
@@ -1018,7 +1019,7 @@ bool CClientThread::ProcessPacket(CRData *data)
 				{
 					data.addUChar(ID_FILESIZE);
 				}
-				data.addUInt64(little_endian(static_cast<uint64>(send_filesize)));
+				data.addUInt64(static_cast<uint64>(send_filesize));
 				if (has_file_extents)
 				{
 					data.addInt64(n_sparse_extents);
@@ -1145,6 +1146,7 @@ bool CClientThread::ProcessPacket(CRData *data)
 						}
 					}
 
+#if !defined(__APPLE__)
 					if( clientpipe==NULL && !with_hashes && count>0 )
 					{
 						#if defined(__APPLE__) || defined(__FreeBSD__)
@@ -1166,10 +1168,10 @@ bool CClientThread::ProcessPacket(CRData *data)
 						}
 						else if(rc==0 && foffset<filesize && errno == 0) //other process made the file smaller
 						{
-							memset(buf.data(), 0, s_bsize);
+							memset(tiger_vector_data(buf), 0, s_bsize);
 							while(foffset<filesize)
 							{
-								rc=SendInt(buf.data(), (std::min)((size_t)s_bsize, (size_t)(next_checkpoint-foffset)));
+								rc=SendInt(tiger_vector_data(buf), (std::min)((size_t)s_bsize, (size_t)(next_checkpoint-foffset)));
 								if(rc==SOCKET_ERROR)
 								{
 									Log("Error: Sending data failed");
@@ -1180,14 +1182,15 @@ bool CClientThread::ProcessPacket(CRData *data)
 						}
 					}
 					else
+#endif
 					{
 						if (count > 0)
 						{
-							ssize_t rc = read(hFile, buf.data(), count);
+							ssize_t rc = read(hFile, tiger_vector_data(buf), count);
 
 							if (rc == 0 && rc < count && errno == 0)  //other process made the file smaller
 							{
-								memset(buf.data() + rc, 0, count - rc);
+								memset(tiger_vector_data(buf) + rc, 0, count - rc);
 								rc = count;
 							}
 							else if (rc < 0)
@@ -1198,7 +1201,7 @@ bool CClientThread::ProcessPacket(CRData *data)
 								return false;
 							}
 
-							rc = SendInt(buf.data(), rc);
+							rc = SendInt(tiger_vector_data(buf), rc);
 							if (rc == SOCKET_ERROR)
 							{
 								Log("Error: Sending data failed");
@@ -1207,7 +1210,7 @@ bool CClientThread::ProcessPacket(CRData *data)
 							}
 							else if (with_hashes)
 							{
-								hash_func.update((unsigned char*)buf.data(), rc);
+								hash_func.update((unsigned char*)tiger_vector_data(buf), rc);
 							}
 
 							foffset += rc;
@@ -2166,7 +2169,7 @@ bool CClientThread::sendFullFile(IFile* file, _i64 start_offset, bool with_hashe
 
 	CWData data;
 	data.addUChar(ID_FILESIZE);
-	data.addUInt64(little_endian(static_cast<uint64>(curr_filesize)));
+	data.addUInt64(static_cast<uint64>(curr_filesize));
 
 	int rc=SendInt(data.getDataPtr(), data.getDataSize(), true);	
 	if(rc==SOCKET_ERROR)
@@ -2239,7 +2242,7 @@ bool CClientThread::sendFullFile(IFile* file, _i64 start_offset, bool with_hashe
 			last_flush_foffset = foffset;
 		}
 
-		rc=SendInt(buf.data(), rc, curr_flush);
+		rc=SendInt(tiger_vector_data(buf), rc, curr_flush);
 		if(rc==SOCKET_ERROR)
 		{
 			Log("Error: Sending data failed");
@@ -2247,7 +2250,7 @@ bool CClientThread::sendFullFile(IFile* file, _i64 start_offset, bool with_hashe
 		}
 		else if(with_hashes)
 		{
-			hash_func.update((unsigned char*)buf.data(), rc);
+			hash_func.update((unsigned char*)tiger_vector_data(buf), rc);
 		}
 
 		foffset+=rc;
@@ -2525,7 +2528,7 @@ int64 CClientThread::getFileExtents(int64 fsize, int64& n_sparse_extents, std::v
 	{
 		DWORD output_bytes;
 		BOOL b = DeviceIoControl(hFile, FSCTL_QUERY_ALLOCATED_RANGES,
-			&query_range, sizeof(query_range), res_buffer.data(), static_cast<DWORD>(res_buffer.size()*sizeof(FILE_ALLOCATED_RANGE_BUFFER)),
+			&query_range, sizeof(query_range), res_tiger_vector_data(buffer), static_cast<DWORD>(res_buffer.size()*sizeof(FILE_ALLOCATED_RANGE_BUFFER)),
 			&output_bytes, NULL);
 
 		bool more_data = (!b && GetLastError() == ERROR_MORE_DATA);
@@ -2681,13 +2684,13 @@ bool CClientThread::sendExtents(const std::vector<SExtent>& file_extents, int64 
 
 	assert(curr_sparse_ext == n_sparse_extents);
 
-	hash_func.update(reinterpret_cast<unsigned char*>(send_buf.data()), static_cast<_u32>(n_sparse_extents * 2 * sizeof(int64)));
+	hash_func.update(reinterpret_cast<unsigned char*>(send_tiger_vector_data(buf)), static_cast<_u32>(n_sparse_extents * 2 * sizeof(int64)));
 
 	hash_func.finalize();
 
 	memcpy(&send_buf[n_sparse_extents * 2], hash_func.raw_digest_int(), 2 * sizeof(int64));
 
-	int rc = SendInt(reinterpret_cast<char*>(send_buf.data()), send_buf.size()*sizeof(int64));
+	int rc = SendInt(reinterpret_cast<char*>(send_tiger_vector_data(buf)), send_buf.size()*sizeof(int64));
 
 	return rc != SOCKET_ERROR;
 }
@@ -2708,13 +2711,13 @@ bool CClientThread::sendSparseExtents(const std::vector<SExtent>& file_extents)
 		send_buf[i * 2 + 1] = little_endian(file_extents[i].size);
 	}
 
-	hash_func.update(reinterpret_cast<unsigned char*>(send_buf.data()), static_cast<_u32>(file_extents.size() * 2 * sizeof(int64)));
+	hash_func.update(reinterpret_cast<unsigned char*>(send_tiger_vector_data(buf)), static_cast<_u32>(file_extents.size() * 2 * sizeof(int64)));
 
 	hash_func.finalize();
 
 	memcpy(&send_buf[file_extents.size() * 2], hash_func.raw_digest_int(), 2 * sizeof(int64));
 
-	int rc = SendInt(reinterpret_cast<char*>(send_buf.data()), send_buf.size()*sizeof(int64));
+	int rc = SendInt(reinterpret_cast<char*>(send_tiger_vector_data(buf)), send_buf.size()*sizeof(int64));
 
 	return rc != SOCKET_ERROR;
 }

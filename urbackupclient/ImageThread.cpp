@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -589,7 +590,7 @@ bool ImageThread::sendIncrImageThread(void)
 				int64 imgpos = 0;
 				do
 				{
-					read = hdat_img->Read(buf.data(), static_cast<_u32>(buf.size()));
+					read = hdat_img->Read(tiger_vector_data(buf), static_cast<_u32>(buf.size()));
 
 					for (_u32 i = 0; i < read; i += SHA256_DIGEST_SIZE)
 					{

@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -419,7 +420,7 @@ bool CowFile::saveBitmap()
 		return false;
 	}
 
-	if(bitmap_file->Write(reinterpret_cast<const char*>(bitmap.data()), bitmap.size())!=bitmap.size())
+	if(bitmap_file->Write(reinterpret_cast<const char*>(tiger_vector_data(bitmap)), bitmap.size())!=bitmap.size())
 	{
 		return false;
 	}

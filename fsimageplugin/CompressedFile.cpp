@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -358,7 +359,7 @@ bool CompressedFile::fillCache( __int64 offset, bool errorMsg, bool *has_error)
 	{
 		rdecomp = blocksize;
 		int rc = mz_uncompress(reinterpret_cast<unsigned char*>(buf), &rdecomp,
-			reinterpret_cast<const unsigned char*>(compressedBuffer.data()), static_cast<mz_ulong>(compressedSize));
+			reinterpret_cast<const unsigned char*>(tiger_vector_data(compressedBuffer)), static_cast<mz_ulong>(compressedSize));
 
 		if(rc != MZ_OK)
 		{
@@ -459,7 +460,7 @@ void CompressedFile::evictFromLruCache( const SCacheItem& item )
 	}
 
 	mz_ulong compBytes = static_cast<mz_ulong>(compressedBuffer.size());
-	int rc = mz_compress(reinterpret_cast<unsigned char*>(compressedBuffer.data()), &compBytes,
+	int rc = mz_compress(reinterpret_cast<unsigned char*>(tiger_vector_data(compressedBuffer)), &compBytes,
 		reinterpret_cast<const unsigned char*>(item.buffer), blocksize);
 
 	if(rc!=MZ_OK)
@@ -484,7 +485,7 @@ void CompressedFile::evictFromLruCache( const SCacheItem& item )
 		return;
 	}
 
-	if(writeToFile(compressedBuffer.data(), static_cast<_u32>(compBytes))!=static_cast<_u32>(compBytes))
+	if(writeToFile(tiger_vector_data(compressedBuffer), static_cast<_u32>(compBytes))!=static_cast<_u32>(compBytes))
 	{
 		error=true;
 		Server->Log("Error while writing compressed data to file", LL_ERROR);

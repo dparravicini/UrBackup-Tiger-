@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 #include "ClientBitmap.h"
 #include "../Interface/Server.h"
 #include "../urbackupcommon/sha2/sha2.h"
@@ -57,14 +58,14 @@ void ClientBitmap::init(IFile * bitmap_file)
 
 	bitmap_data.resize(bitmap_file->Size() - 8 - sha_size - sizeof(bitmap_blocksize));
 
-	if (bitmap_file->Read(bitmap_data.data(), static_cast<_u32>(bitmap_data.size())) != bitmap_data.size())
+	if (bitmap_file->Read(tiger_vector_data(bitmap_data), static_cast<_u32>(bitmap_data.size())) != bitmap_data.size())
 	{
 		Server->Log("Error reading bitmap data from " + bitmap_file->getFilename(), LL_ERROR);
 		has_error = true;
 		return;
 	}
 
-	sha256_update(&shactx, reinterpret_cast<unsigned char*>(bitmap_data.data()), static_cast<_u32>(bitmap_data.size()));
+	sha256_update(&shactx, reinterpret_cast<unsigned char*>(tiger_vector_data(bitmap_data)), static_cast<_u32>(bitmap_data.size()));
 
 	char sha_dig[sha_size];
 

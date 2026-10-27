@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -463,9 +464,9 @@ bool copy_os_metadata( const std::string& in_fn, const std::string& out_fn, INot
 	_u32 read;
 	do 
 	{
-		read = in_f->Read(buffer.data(), static_cast<_u32>(buffer.size()));
+		read = in_f->Read(tiger_vector_data(buffer), static_cast<_u32>(buffer.size()));
 
-		if(!writeRepeatFreeSpace(out_f.get(), buffer.data(), read, cb))
+		if(!writeRepeatFreeSpace(out_f.get(), tiger_vector_data(buffer), read, cb))
 		{
 			Server->Log("Error while writing os metadata to \""+out_fn+"\" (output)", LL_ERROR);
 			return false;

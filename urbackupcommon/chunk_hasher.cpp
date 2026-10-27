@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -227,7 +228,7 @@ bool build_chunk_hashs(IFile *f, IFile *hashoutput, INotEnoughSpaceCallback *cb,
 							for (int64 written = 0; written < extent_size;)
 							{
 								_u32 towrite = static_cast<_u32>((std::min)(extent_size - written, static_cast<int64>(zero_buf.size())));
-								if (!writeRepeatFreeSpace(copy, zero_buf.data(), towrite, cb))
+								if (!writeRepeatFreeSpace(copy, tiger_vector_data(zero_buf), towrite, cb))
 								{
 									Server->Log("Error writing to copy file (" + copy->getFilename() + ")", LL_DEBUG);
 									return false;
@@ -302,7 +303,7 @@ bool build_chunk_hashs(IFile *f, IFile *hashoutput, INotEnoughSpaceCallback *cb,
 			if(hashf!=NULL && treehash==NULL)
 			{
 				int64 buf_offset = pos%sha_buf.size();
-				memcpy(sha_buf.data() + buf_offset, buf, r);
+				memcpy(tiger_vector_data(sha_buf) + buf_offset, buf, r);
 			}
 			if(copy!=NULL)
 			{
@@ -401,7 +402,7 @@ bool build_chunk_hashs(IFile *f, IFile *hashoutput, INotEnoughSpaceCallback *cb,
 			if (buf_read == c_checkpoint_dist)
 			{
 				if ( (treehash!=NULL && all_zeros ) 
-					|| (treehash==NULL && buf_is_zero(sha_buf.data(), sha_buf.size())) )
+					|| (treehash==NULL && buf_is_zero(tiger_vector_data(sha_buf), sha_buf.size())) )
 				{
 					if (sparse_extent_start == -1)
 					{
@@ -425,7 +426,7 @@ bool build_chunk_hashs(IFile *f, IFile *hashoutput, INotEnoughSpaceCallback *cb,
 					}
 					else
 					{
-						hashf->hash(sha_buf.data(), static_cast<unsigned int>(sha_buf.size()));
+						hashf->hash(tiger_vector_data(sha_buf), static_cast<unsigned int>(sha_buf.size()));
 					}
 				}
 			}
@@ -448,7 +449,7 @@ bool build_chunk_hashs(IFile *f, IFile *hashoutput, INotEnoughSpaceCallback *cb,
 				}
 				else
 				{
-					hashf->hash(sha_buf.data(), buf_read);
+					hashf->hash(tiger_vector_data(sha_buf), buf_read);
 				}
 			}
 		}

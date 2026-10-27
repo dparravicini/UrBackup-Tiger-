@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -256,9 +257,9 @@ namespace
 			size_t fsize=(size_t)f->Size();
 			std::vector<char> buf;
 			buf.resize(fsize);
-			f->Read(buf.data(), (_u32)fsize);
+			f->Read(tiger_vector_data(buf), (_u32)fsize);
 
-			CRData mbr(buf.data(), fsize);
+			CRData mbr(tiger_vector_data(buf), fsize);
 			SMBRData mbrdata(mbr);
 			if(mbrdata.hasError())
 			{
@@ -423,7 +424,7 @@ namespace
 				{
 					int64 toread = (std::min)(static_cast<int64>(buf.size()), size-pos);
 
-					_u32 read = input_files[i]->Read(buf.data(), static_cast<_u32>(toread));
+					_u32 read = input_files[i]->Read(tiger_vector_data(buf), static_cast<_u32>(toread));
 
 					if(read!=toread)
 					{
@@ -431,7 +432,7 @@ namespace
 						return false;
 					}
 
-					if(vhdout.Write(buf.data(), read)!=read)
+					if(vhdout.Write(tiger_vector_data(buf), read)!=read)
 					{
 						Server->Log("Error writing to VHD output file (2)", LL_ERROR);
 						return false;

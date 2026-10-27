@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -150,7 +151,7 @@ void ChunkSendThread::operator()(void)
 			else if (!sparse_extents.empty())
 			{
 				MD5 sparse_hash;
-				sparse_hash.update(reinterpret_cast<unsigned char*>(sparse_extents.data()), static_cast<_u32>(sparse_extents.size()*sizeof(IFsFile::SSparseExtent)));
+				sparse_hash.update(reinterpret_cast<unsigned char*>(tiger_vector_data(sparse_extents)), static_cast<_u32>(sparse_extents.size()*sizeof(IFsFile::SSparseExtent)));
 				sparse_hash.finalize();
 
 				IFsFile::SSparseExtent hash_extent;
@@ -158,7 +159,7 @@ void ChunkSendThread::operator()(void)
 
 				sparse_extents.push_back(hash_extent);
 
-				if (parent->SendInt(reinterpret_cast<char*>(sparse_extents.data()), sparse_extents.size()*sizeof(IFsFile::SSparseExtent)) != sparse_extents.size()*sizeof(IFsFile::SSparseExtent))
+				if (parent->SendInt(reinterpret_cast<char*>(tiger_vector_data(sparse_extents)), sparse_extents.size()*sizeof(IFsFile::SSparseExtent)) != sparse_extents.size()*sizeof(IFsFile::SSparseExtent))
 				{
 					has_error = true;
 				}

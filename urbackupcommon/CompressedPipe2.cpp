@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -89,7 +90,7 @@ size_t CompressedPipe2::Read(char *buffer, size_t bsize, int timeoutms)
 
 	if(timeoutms==0)
 	{
-		size_t rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
+		size_t rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
 		if(rc==0)
 			return 0;
 
@@ -101,7 +102,7 @@ size_t CompressedPipe2::Read(char *buffer, size_t bsize, int timeoutms)
 		size_t rc;
 		do
 		{
-			rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
+			rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
 			if(rc==0)
 				return 0;
 			if(has_error)
@@ -126,7 +127,7 @@ size_t CompressedPipe2::Read(char *buffer, size_t bsize, int timeoutms)
 			break;
 		}
 
-		rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, left);
+		rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, left);
 		if(rc==0)
 			return 0;
 		if(has_error)
@@ -181,7 +182,7 @@ size_t CompressedPipe2::ProcessToBuffer(char *buffer, size_t bsize, bool fromLas
 	}
 
 	inf_stream.avail_in = static_cast<unsigned int>(input_buffer_size);
-	inf_stream.next_in = reinterpret_cast<Bytef*>(input_buffer.data());
+	inf_stream.next_in = reinterpret_cast<Bytef*>(tiger_vector_data(input_buffer));
 	
 	if(!set_out)
 	{
@@ -284,7 +285,7 @@ bool CompressedPipe2::Write(const char *buffer, size_t bsize, int timeoutms, boo
 		do 
 		{
 			def_stream.avail_out = static_cast<unsigned int>(comp_buffer.size());
-			def_stream.next_out = reinterpret_cast<unsigned char*>(comp_buffer.data());
+			def_stream.next_out = reinterpret_cast<unsigned char*>(tiger_vector_data(comp_buffer));
 
 			VLOG(Server->Log("deflate avail_in=" + convert(def_stream.avail_in) + " avail_out=" + convert(def_stream.avail_out)+" flush="+convert(curr_flush), LL_DEBUG));
 			int rc = deflate(&def_stream, curr_flush ? Z_SYNC_FLUSH : Z_NO_FLUSH);
@@ -323,7 +324,7 @@ bool CompressedPipe2::Write(const char *buffer, size_t bsize, int timeoutms, boo
 			{
 				last_send_time = Server->getTimeMS();
 
-				bool b=cs->Write(comp_buffer.data(), used, curr_timeout, curr_flush);
+				bool b=cs->Write(tiger_vector_data(comp_buffer), used, curr_timeout, curr_flush);
 				if(!b)
 					return false;
 			}
@@ -360,7 +361,7 @@ size_t CompressedPipe2::Read(std::string *ret, int timeoutms)
 
 	if(timeoutms==0)
 	{
-		size_t rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
+		size_t rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
 		if(rc==0)
 			return 0;
 
@@ -377,7 +378,7 @@ size_t CompressedPipe2::Read(std::string *ret, int timeoutms)
 		size_t rc;
 		do
 		{
-			rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
+			rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, timeoutms);
 			if(rc==0)
 				return 0;
 
@@ -400,7 +401,7 @@ size_t CompressedPipe2::Read(std::string *ret, int timeoutms)
 	{
 		int left=timeoutms-static_cast<int>(Server->getTimeMS()-starttime);
 
-		rc=cs->Read(input_buffer.data()+input_buffer_size, input_buffer.size()-input_buffer_size, left);
+		rc=cs->Read(tiger_vector_data(input_buffer)+input_buffer_size, input_buffer.size()-input_buffer_size, left);
 		if(rc==0)
 			return 0;
 

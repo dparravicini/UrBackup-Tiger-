@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 #include "SparseFile.h"
 #include <algorithm>
 #include <assert.h>
@@ -30,7 +31,7 @@ SparseFile::SparseFile(IFsFile * backing_file, IFile * sparse_extends_f, bool re
 	std::vector<IFsFile::SSparseExtent> sparse_extents;
 	sparse_extents.resize(static_cast<size_t>(n_extents));
 
-	if (sparse_extends_f->Read(reinterpret_cast<char*>(sparse_extents.data()), static_cast<_u32>(sparse_extents.size()*sizeof(IFsFile::SSparseExtent)))
+	if (sparse_extends_f->Read(reinterpret_cast<char*>(tiger_vector_data(sparse_extents)), static_cast<_u32>(sparse_extents.size()*sizeof(IFsFile::SSparseExtent)))
 		!= static_cast<_u32>(sparse_extents.size()*sizeof(IFsFile::SSparseExtent)))
 	{
 		has_error = true;

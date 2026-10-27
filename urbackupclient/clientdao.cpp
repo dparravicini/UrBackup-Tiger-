@@ -324,7 +324,7 @@ void ClientDAO::addFiles(std::string path, int tgroup, const std::vector<SFileAn
 	char *buffer=constructData(data, ds);
 	q_add_files->Bind(path);
 	q_add_files->Bind(tgroup);
-	q_add_files->Bind(ds);
+	q_add_files->Bind(static_cast<int64>(ds));
 	q_add_files->Bind(buffer, (_u32)ds);
 	q_add_files->Write();
 	q_add_files->Reset();
@@ -336,7 +336,7 @@ void ClientDAO::modifyFiles(std::string path, int tgroup, const std::vector<SFil
 	size_t ds;
 	char *buffer=constructData(data, ds);
 	q_modify_files->Bind(buffer, (_u32)ds);
-	q_modify_files->Bind(ds);
+	q_modify_files->Bind(static_cast<int64>(ds));
 	q_modify_files->Bind(path);
 	q_modify_files->Bind(tgroup);
 	q_modify_files->Write();

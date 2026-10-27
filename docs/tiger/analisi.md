@@ -52,3 +52,30 @@ Si fornisce un valore esplicito; i layout serializzati vanno verificati
 con test reali. pthread si trova in libSystem e non richiede -pthread,
 flag non riconosciuto dal driver Apple. Queste correzioni non cambiano
 il protocollo.
+
+## Secondo passaggio sul G4
+
+Il core, SQLite e Crypto++ 5.6.3 sono entrati nella compilazione nativa;
+la compilazione estesa ha trovato usi vector::data non disponibili nella
+libstdc++ Tiger. Il port fornisce un adattatore C++98 per i vettori, lasciando
+invariato il contenuto dei buffer. Sono inoltre necessari cast espliciti
+size_t→int64 nei parametri SQLite su PPC32.
+
+Il trasferimento usa su Tiger il percorso upstream read/SendInt già presente,
+poiché sendfile è successivo a Tiger e il vecchio ramo Darwin conteneva un
+cast size_t*→off_t* scorretto su PPC32. Nessuna nuova implementazione di rete.
+
+Il ripristino upstream usava stat64/O_SYMLINK/O_CLOEXEC e UF_HIDDEN non
+presenti nell'SDK Tiger. Si usa stat nativo, e setattrlist con FSOPT_NOFOLLOW
+per tempi/flag dei link; il bit UF_HIDDEN non esposto da Tiger è escluso.
+Non confondere FinderInfo con il flag BSD UF_HIDDEN. Queste funzioni richiedono
+ancora verifica runtime, oltre alla compilazione.
+
+Corrette doppie conversioni little endian nel campo dimensione file inviato
+con CWData::addUInt64 e nel campo lunghezza nome del canale metadati.
+Il test --tiger-self-test confronterà byte attesi, layout, AES/SHA256 e
+metadati locali appena disponibile il binario completo; non è ancora passato.
+
+Server installato: 2.5.37.0. HTTP 55414 non in ascolto alla verifica; FastCGI
+55413 risponde a richieste API e richiede inizializzazione/autenticazione di
+sessione. Non sono stati riavviati processi o modificati backup esistenti.

@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -473,7 +474,7 @@ void PipeFileBase::readBuf(char* buf, size_t toread)
 	if(buf_w_pos>=buf_r_pos)
 	{
 		assert(buf_w_pos - buf_r_pos >= toread);
-		char* ptr_str = buffer.data();
+		char* ptr_str = tiger_vector_data(buffer);
 		memcpy(buf, &buffer[buf_r_pos], toread);
 		buf_r_pos+=toread;
 		curr_pos+=toread;

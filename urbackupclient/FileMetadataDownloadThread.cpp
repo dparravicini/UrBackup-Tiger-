@@ -1,3 +1,8 @@
+#ifdef __APPLE__
+#include "../tiger/compat_time.h"
+#define stat64 stat
+#endif
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -298,15 +303,15 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 
 	std::vector<char> stat_data;
 	stat_data.resize(stat_data_size);
-	if(metadata_f->Read(stat_data.data(), static_cast<_u32>(stat_data.size()))!=stat_data.size())
+	if(metadata_f->Read(tiger_vector_data(stat_data), static_cast<_u32>(stat_data.size()))!=stat_data.size())
 	{
 		restore.log("Error reading windows metadata from \"" + metadata_f->getFilename() + "\"", LL_ERROR);
 		return false;
 	}
 
-	data_checksum = urb_adler32(data_checksum, stat_data.data(), static_cast<_u32>(stat_data.size()));
+	data_checksum = urb_adler32(data_checksum, tiger_vector_data(stat_data), static_cast<_u32>(stat_data.size()));
 
-	CRData read_stat(stat_data.data(), stat_data.size());
+	CRData read_stat(tiger_vector_data(stat_data), stat_data.size());
 
 	if(!read_stat.getChar(&version) || version!=1)
 	{
@@ -337,39 +342,39 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 		std::vector<char> stream_id;
 		stream_id.resize(metadata_id_size);
 
-		if(metadata_f->Read(stream_id.data(), metadata_id_size)!=metadata_id_size)
+		if(metadata_f->Read(tiger_vector_data(stream_id), metadata_id_size)!=metadata_id_size)
 		{
 			restore.log("Error reading  \"" + metadata_f->getFilename() + "\"", LL_ERROR);
 			has_error=true;
 			break;
 		}
 
-		data_checksum = urb_adler32(data_checksum, stream_id.data(), metadata_id_size);
+		data_checksum = urb_adler32(data_checksum, tiger_vector_data(stream_id), metadata_id_size);
 
 		WIN32_STREAM_ID_INT* curr_stream_id =
-			reinterpret_cast<WIN32_STREAM_ID_INT*>(stream_id.data());
+			reinterpret_cast<WIN32_STREAM_ID_INT*>(tiger_vector_data(stream_id));
 
 		if(curr_stream_id->dwStreamNameSize>0)
 		{
 			stream_id.resize(stream_id.size()+curr_stream_id->dwStreamNameSize);
 
 			curr_stream_id =
-				reinterpret_cast<WIN32_STREAM_ID_INT*>(stream_id.data());
+				reinterpret_cast<WIN32_STREAM_ID_INT*>(tiger_vector_data(stream_id));
 
-			if(metadata_f->Read(stream_id.data() + metadata_id_size, static_cast<_u32>(curr_stream_id->dwStreamNameSize))!=curr_stream_id->dwStreamNameSize)
+			if(metadata_f->Read(tiger_vector_data(stream_id) + metadata_id_size, static_cast<_u32>(curr_stream_id->dwStreamNameSize))!=curr_stream_id->dwStreamNameSize)
 			{
 				restore.log("Error reading  \"" + metadata_f->getFilename() + "\" -2", LL_ERROR);
 				has_error=true;
 				break;
 			}
 
-			data_checksum = urb_adler32(data_checksum, stream_id.data() + metadata_id_size, static_cast<_u32>(curr_stream_id->dwStreamNameSize));
+			data_checksum = urb_adler32(data_checksum, tiger_vector_data(stream_id) + metadata_id_size, static_cast<_u32>(curr_stream_id->dwStreamNameSize));
 		}	
 
 		if (hFile != INVALID_HANDLE_VALUE)
 		{
 			DWORD written = 0;
-			BOOL b = BackupWrite(hFile, reinterpret_cast<LPBYTE>(stream_id.data()), static_cast<DWORD>(stream_id.size()), &written, FALSE, TRUE, &context);
+			BOOL b = BackupWrite(hFile, reinterpret_cast<LPBYTE>(tiger_vector_data(stream_id)), static_cast<DWORD>(stream_id.size()), &written, FALSE, TRUE, &context);
 
 			if (!b || written != stream_id.size())
 			{
@@ -385,19 +390,19 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 		{
 			_u32 toread = static_cast<_u32>((std::min)(static_cast<int64>(buffer.size()), curr_stream_id->Size-curr_pos));
 
-			if(metadata_f->Read(buffer.data(), toread)!=toread)
+			if(metadata_f->Read(tiger_vector_data(buffer), toread)!=toread)
 			{
 				restore.log("Error reading  \"" + metadata_f->getFilename() + "\" -3", LL_ERROR);
 				has_error=true;
 				break;
 			}
 
-			data_checksum = urb_adler32(data_checksum, buffer.data(), toread);
+			data_checksum = urb_adler32(data_checksum, tiger_vector_data(buffer), toread);
 
 			if (hFile != INVALID_HANDLE_VALUE)
 			{
 				DWORD written = 0;
-				BOOL b = BackupWrite(hFile, reinterpret_cast<LPBYTE>(buffer.data()), toread, &written, FALSE, TRUE, &context);
+				BOOL b = BackupWrite(hFile, reinterpret_cast<LPBYTE>(tiger_vector_data(buffer)), toread, &written, FALSE, TRUE, &context);
 
 				if (!b || written != toread)
 				{
@@ -524,7 +529,7 @@ namespace
 #ifndef __linux__
 
 #ifdef __APPLE__
-		int64 chflags_mask = UF_NODUMP | UF_IMMUTABLE | UF_APPEND | UF_OPAQUE | UF_HIDDEN | SF_ARCHIVED | SF_IMMUTABLE | SF_APPEND;
+		int64 chflags_mask = UF_NODUMP | UF_IMMUTABLE | UF_APPEND | UF_OPAQUE | SF_ARCHIVED | SF_IMMUTABLE | SF_APPEND;
 #else
 		int64 chflags_mask = SF_APPEND | SF_ARCHIVED | SF_IMMUTABLE | SF_NOUNLINK | UF_APPEND | UF_ARCHIVE | UF_HIDDEN | UF_IMMUTABLE | UF_NODUMP | UF_NOUNLINK | UF_OFFLINE | UF_OPAQUE | UF_READONLY | UF_REPARSE | UF_SPARSE | UF_SYSTEM;
 #endif
@@ -558,37 +563,19 @@ namespace
 				*/
 
 #ifdef __APPLE__
-				int fd = open(fn.c_str(), O_WRONLY | O_NOFOLLOW | O_SYMLINK | O_CLOEXEC);
-				if (fd == -1)
-				{
-					restore.log("Error setting access and modification time of symlink \"" + fn + "\" -1 errno: " + convert(errno), LL_ERROR);
-					ret = false;
-				}
-				else
-				{
-					struct timeval tv[2];
-					tv[0].tv_sec = statbuf.st_atimespec.tv_sec;
-					tv[0].tv_usec = statbuf.st_atimespec.tv_nsec / 1000;
-					tv[1].tv_sec = statbuf.st_mtimespec.tv_sec;
-					tv[1].tv_usec = statbuf.st_mtimespec.tv_nsec / 1000;
-					int rc1 = futimes(fd, tv);
-
-					if (rc1 != 0)
-					{
-						restore.log("Error setting access and modification time of symlink \"" + fn + "\" -2 errno: " + convert(errno), LL_ERROR);
-						ret = false;
-					}
-
-					int rc2 = fchflags(fd, statbuf.st_flags & chflags_mask);
-
-					if (rc2 != 0)
-					{
-						restore.log("Error setting BSD flags of symlink \"" + fn + "\" -2 errno: " + convert(errno), LL_ERROR);
-						ret = false;
-					}
-
-					close(fd);
-				}
+                struct timeval tv[2];
+                tv[0].tv_sec = statbuf.st_atimespec.tv_sec;
+                tv[0].tv_usec = statbuf.st_atimespec.tv_nsec / 1000;
+                tv[1].tv_sec = statbuf.st_mtimespec.tv_sec;
+                tv[1].tv_usec = statbuf.st_mtimespec.tv_nsec / 1000;
+                if (tiger_lutimes(fn.c_str(), tv) != 0) {
+                    restore.log("Error setting symlink timestamps: " + fn, LL_ERROR);
+                    ret = false;
+                }
+                if (tiger_lchflags(fn.c_str(), statbuf.st_flags & chflags_mask) != 0) {
+                    restore.log("Error setting symlink flags: " + fn, LL_ERROR);
+                    ret = false;
+                }
 #else
 				timespec tss[2];
 				tss[0] = statbuf.st_atim;
@@ -783,15 +770,15 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 
     std::vector<char> stat_data;
 	stat_data.resize(stat_data_size);
-    if(metadata_f->Read(stat_data.data(), stat_data.size())!=stat_data.size())
+    if(metadata_f->Read(tiger_vector_data(stat_data), stat_data.size())!=stat_data.size())
     {
         restore.log("Error reading unix metadata from \"" + metadata_f->getFilename() + "\"", LL_ERROR);
         return false;
     }
 
-	data_checksum = urb_adler32(data_checksum, stat_data.data(), stat_data.size());
+	data_checksum = urb_adler32(data_checksum, tiger_vector_data(stat_data), stat_data.size());
 
-    CRData read_stat(stat_data.data(), stat_data.size());
+    CRData read_stat(tiger_vector_data(stat_data), stat_data.size());
 
 	if(!read_stat.getChar(&version) || version!=1)
 	{

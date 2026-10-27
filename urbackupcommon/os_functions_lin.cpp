@@ -1,3 +1,6 @@
+#ifdef __APPLE__
+#include "../tiger/compat_time.h"
+#endif
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -734,7 +737,11 @@ bool os_set_file_time(const std::string& fn, int64 created, int64 last_modified,
     tv[1].tv_sec = mtime;
     tv[1].tv_usec = 0;
 	
+	#ifdef __APPLE__
+	int rc = tiger_lutimes(fn.c_str(), tv);
+#else
 	int rc = lutimes(fn.c_str(), tv);
+#endif
 	return rc==0;
 #endif
 }

@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -4486,7 +4487,7 @@ bool IndexThread::getShaBinary( const std::string& fn, IHashFunc& hf)
 		if (curr_bsize > 0)
 		{
 			bool has_read_error = false;
-			rc = f->Read(buf.data(), static_cast<_u32>(curr_bsize), &has_read_error);
+			rc = f->Read(tiger_vector_data(buf), static_cast<_u32>(curr_bsize), &has_read_error);
 
 			if (has_read_error)
 			{
@@ -4501,7 +4502,7 @@ bool IndexThread::getShaBinary( const std::string& fn, IHashFunc& hf)
 			rc = 0;
 		}
 
-		if (rc == bsize && buf_is_zero(buf.data(), bsize))
+		if (rc == bsize && buf_is_zero(tiger_vector_data(buf), bsize))
 		{
 			if (skip_start == -1)
 			{
@@ -4523,7 +4524,7 @@ bool IndexThread::getShaBinary( const std::string& fn, IHashFunc& hf)
 
 		if (rc > 0)
 		{
-			hf.hash(buf.data(), rc);
+			hf.hash(tiger_vector_data(buf), rc);
 			fpos += rc;
 		}
 	}
@@ -4809,7 +4810,7 @@ bool IndexThread::nextLastFilelistItem(SFile& data, str_map* extra, bool with_up
 
 			last_filelist->buf_pos = 0;
 			bool has_read_error = false;
-			_u32 read = last_filelist->f->Read(last_filelist->buf.data(),
+			_u32 read = last_filelist->f->Read(last_filelist->tiger_vector_data(buf),
 				static_cast<_u32>(last_filelist->buf.size()), &has_read_error);
 			if (has_read_error)
 			{
@@ -5252,7 +5253,7 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 	buf.resize(2*sizeof(DWORD));
 
 	DWORD bytesReturned;
-	b = DeviceIoControl(hVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, buf.data(), static_cast<DWORD>(buf.size()), &bytesReturned, NULL);
+	b = DeviceIoControl(hVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, tiger_vector_data(buf), static_cast<DWORD>(buf.size()), &bytesReturned, NULL);
 
 	if (!b && GetLastError() != ERROR_MORE_DATA)
 	{
@@ -5262,7 +5263,7 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 		return false;
 	}
 
-	PURBCT_BITMAP_DATA bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(buf.data());
+	PURBCT_BITMAP_DATA bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(tiger_vector_data(buf));
 
 	if (bitmap_data->BitmapSize < bitmapBytes)
 	{
@@ -5272,7 +5273,7 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 
 	buf.resize(2*sizeof(DWORD) + bitmap_data->BitmapSize);
 
-	b = DeviceIoControl(hVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, buf.data(), static_cast<DWORD>(buf.size()), &bytesReturned, NULL);
+	b = DeviceIoControl(hVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, tiger_vector_data(buf), static_cast<DWORD>(buf.size()), &bytesReturned, NULL);
 
 	if (!b)
 	{
@@ -5285,7 +5286,7 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 	std::vector<char> buf_snap;
 	buf_snap.resize(buf.size());
 
-	b = DeviceIoControl(hSnapVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, buf_snap.data(), static_cast<DWORD>(buf_snap.size()), &bytesReturned, NULL);
+	b = DeviceIoControl(hSnapVolume, IOCTL_URBCT_RETRIEVE_BITMAP, NULL, 0, tiger_vector_data(buf_snap), static_cast<DWORD>(buf_snap.size()), &bytesReturned, NULL);
 
 	if (!b)
 	{
@@ -5295,10 +5296,10 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 		return false;
 	}	
 
-	bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(buf.data());
+	bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(tiger_vector_data(buf));
 	char* urbackupcbt_magic = URBT_MAGIC;
 
-	PURBCT_BITMAP_DATA snap_bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(buf_snap.data());
+	PURBCT_BITMAP_DATA snap_bitmap_data = reinterpret_cast<PURBCT_BITMAP_DATA>(tiger_vector_data(buf_snap));
 
 	DWORD RealBitmapSize = 0;
 
@@ -5345,7 +5346,7 @@ bool IndexThread::finishCbt(std::string volume, int shadow_id, std::string snap_
 
 	VSSLog("Change block tracking reports " + PrettyPrintBytes(changed_bytes_sc) + " have changed on shadow copy " + snap_volume, LL_DEBUG);
 
-	b = DeviceIoControl(hVolume, IOCTL_URBCT_APPLY_BITMAP, buf_snap.data(), static_cast<DWORD>(buf_snap.size()), NULL, 0, &bytesReturned, NULL);
+	b = DeviceIoControl(hVolume, IOCTL_URBCT_APPLY_BITMAP, tiger_vector_data(buf_snap), static_cast<DWORD>(buf_snap.size()), NULL, 0, &bytesReturned, NULL);
 
 	if (!b)
 	{
@@ -5672,9 +5673,9 @@ void IndexThread::createMd5sumsFile(const std::string & path, const std::string&
 
 				bool has_read_error = false;
 				_u32 rc;
-				while ((rc=f->Read(buf.data(), static_cast<_u32>(buf.size()), &has_read_error)) > 0)
+				while ((rc=f->Read(tiger_vector_data(buf), static_cast<_u32>(buf.size()), &has_read_error)) > 0)
 				{
-					md5.update(reinterpret_cast<unsigned char*>(buf.data()), static_cast<_u32>(rc));
+					md5.update(reinterpret_cast<unsigned char*>(tiger_vector_data(buf)), static_cast<_u32>(rc));
 				}
 
 				if (has_read_error)

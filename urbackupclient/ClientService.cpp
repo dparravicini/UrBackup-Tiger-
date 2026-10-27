@@ -1854,7 +1854,7 @@ void ClientConnector::saveLogdata(const std::string &created, const std::string 
 		q->Bind(logid);
 		q->Bind(loglevel);
 		q->Bind(msg);
-		q->Bind(i);
+		q->Bind(static_cast<int64>(i));
 		q->Bind(ltime);
 		q->Write();
 		q->Reset();

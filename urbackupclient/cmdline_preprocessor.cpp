@@ -1,3 +1,6 @@
+#ifdef __APPLE__
+#include "../tiger/selftest.h"
+#endif
 #include "../tclap/CmdLine.h"
 #include <vector>
 #include "../stringtools.h"
@@ -184,6 +187,9 @@ int main(int argc, char* argv[])
 	{
 		std::string arg = argv[i];
 
+		#ifdef __APPLE__
+		if(arg=="--tiger-self-test") return tiger_selftest();
+#endif
 		if(arg=="--version")
 		{
 			show_version();
