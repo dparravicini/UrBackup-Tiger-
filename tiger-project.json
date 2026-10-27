@@ -1,0 +1,13 @@
+{
+  "name": "urbackup-tiger-2.0.34",
+  "artifact": "urbackupclientbackend",
+  "make_command": "/bin/sh tiger/build.sh",
+  "test_command": "./urbackupclientbackend --version",
+  "deploy_path": "deploy/urbackup-tiger-2.0.34",
+  "excludes": [
+    "autom4te.cache",
+    "urbackupserver",
+    "urbackupserver_installer_win",
+    "restore_cd"
+  ]
+}

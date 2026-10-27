@@ -1,0 +1,6 @@
+{
+  "name": "urbackup-tiger-platform-probe",
+  "artifact": "build/tiger-probe",
+  "test_command": "./build/tiger-probe",
+  "deploy_path": "deploy/urbackup-tiger-platform-probe"
+}
