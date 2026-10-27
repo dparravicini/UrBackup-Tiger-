@@ -41,3 +41,14 @@ permessi, mtime e contenuto. La prova di piattaforma ha creato un file temporane
 scritto 8 byte in /..namedfork/rsrc e letto gli stessi byte da getxattr;
 compilazione Mach-O ppc e test/run sul Tiger completati con exit 0.
 Questo prova solo le API di Tiger, non il round trip UrBackup.
+
+## Prime correzioni verificate dal compilatore
+
+Il primo configure falliva perché Apple ld riceveva due volte -syslibroot.
+Il secondo configure completa i controlli con GCC 4.0.1 e rileva assenza
+di syncfs/fallocate64, già facoltative. Il build raggiunge Database.cpp,
+dove il pragma pack(push) senza valore è rifiutato dal compilatore Apple.
+Si fornisce un valore esplicito; i layout serializzati vanno verificati
+con test reali. pthread si trova in libSystem e non richiede -pthread,
+flag non riconosciuto dal driver Apple. Queste correzioni non cambiano
+il protocollo.

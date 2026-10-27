@@ -13,6 +13,8 @@ Usa Vintage-DevKit separato, senza modificarlo. Sulla Freebox:
 cd /home/freebox/ports/urbackup-tiger/tiger/probes
 tiger build && tiger test && tiger deploy && tiger run
 cd ../..
+# configure and Makefile.in are supplied; regenerate on Debian if needed:
+# sh tiger/prepare.sh
 tiger --timeout 3600 build
 ```
 

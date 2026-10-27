@@ -1980,8 +1980,7 @@ bool ClientConnector::waitForThread(void)
 bool ClientConnector::sendMBR(std::string dl, std::string &errmsg)
 {
 #ifdef _WIN32
-#pragma pack(push)
-#pragma pack(1)
+#pragma pack(push, 1)
 	struct EfiHeader
 	{
 		uint64 signature;

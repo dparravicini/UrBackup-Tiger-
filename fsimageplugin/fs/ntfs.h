@@ -2,7 +2,7 @@
 #include "../filesystem.h"
 
 #ifndef sun
-#pragma pack(push)
+#pragma pack(push, 8)
 #endif
 #pragma pack(1)
 

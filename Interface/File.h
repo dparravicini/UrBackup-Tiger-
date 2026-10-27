@@ -45,7 +45,7 @@ public:
 class IFsFile : public IFile
 {
 public:
-#pragma pack(push)
+#pragma pack(push, 8)
 	struct SSparseExtent
 	{
 		SSparseExtent()
