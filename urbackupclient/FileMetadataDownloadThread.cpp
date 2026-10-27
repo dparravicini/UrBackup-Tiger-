@@ -690,6 +690,7 @@ namespace
 
             std::string buf;
             buf.resize(bufsize);
+            if (bufsize == 0) { keys.clear(); return true; }
 
             bufsize = llistxattr(fn.c_str(), &buf[0], buf.size());
 
@@ -705,7 +706,8 @@ namespace
                 return false;
             }
 
-            TokenizeMail(buf, keys, "\0");
+            buf.resize(bufsize);
+            TokenizeMail(buf, keys, std::string(1, '\0'));
 
             return true;
         }
@@ -794,14 +796,21 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 	struct stat64 statbuf;
     unserialize_stat_buf(read_stat, statbuf, symlink_target);
 
-    if(!restore_stat_buf(restore, statbuf, output_fn, symlink_target))
+    bool metadata_ok = true;
+    bool defer_stat = false;
+#ifdef __APPLE__
+    defer_stat = S_ISREG(statbuf.st_mode) || S_ISDIR(statbuf.st_mode);
+#endif
+    if(!defer_stat && !restore_stat_buf(restore, statbuf, output_fn, symlink_target))
     {
         restore.log("Error setting unix metadata of "+output_fn, LL_ERROR);
+        metadata_ok = false;
     }
 
     if(!remove_all_xattr(output_fn))
     {
         restore.log("Error removing xattrs of "+ output_fn, LL_ERROR);
+        metadata_ok = false;
     }
 
     int64 num_eattr_keys;
@@ -839,6 +848,10 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 
 		data_checksum = urb_adler32(data_checksum, &eattr_key[0], eattr_key.size());
 
+        if (eattr_key.empty() || eattr_key.find('\0') != std::string::npos) {
+            restore.log("Invalid extended attribute name in backup metadata", LL_ERROR);
+            return false;
+        }
         unsigned int val_size;
         if(metadata_f->Read(reinterpret_cast<char*>(&val_size), sizeof(val_size))!=sizeof(val_size))
         {
@@ -864,6 +877,7 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
         if(lsetxattr(output_fn.c_str(), eattr_key.c_str(), eattr_val.data(), eattr_val.size(), 0)!=0)
         {
             restore.log("Error setting xattr "+eattr_key+" of "+ output_fn +" errno: "+convert(errno), LL_ERROR);
+            metadata_ok = false;
         }
     }
 
@@ -880,7 +894,12 @@ bool FileMetadataDownloadThread::applyOsMetadata( IFile* metadata_f, const std::
 		return false;
 	}
 
-    return true;
+    // Resource fork writes change HFS+ mtime; apply final times and flags last.
+    if (defer_stat && !restore_stat_buf(restore, statbuf, output_fn, symlink_target)) {
+        restore.log("Error applying final HFS+ metadata: " + output_fn, LL_ERROR);
+        metadata_ok = false;
+    }
+    return metadata_ok;
 }
 
 #endif //_WIN32

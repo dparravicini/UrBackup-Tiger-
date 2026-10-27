@@ -27,6 +27,7 @@
 #include <sys/statvfs.h>
 #include <dirent.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <unistd.h>
 #include <stdio.h>
 #include <algorithm>
@@ -855,14 +856,9 @@ SFile getFileMetadata( const std::string &path )
 
 std::string os_get_final_path(std::string path)
 {
-    char* retptr = realpath((path).c_str(), NULL);
-	if(retptr==NULL)
-	{
-		return path;
-	}
-    std::string ret = (retptr);
-	free(retptr);
-	return ret;
+    char resolved[PATH_MAX];
+    if (realpath(path.c_str(), resolved) == NULL) return path;
+    return std::string(resolved);
 }
 
 bool os_path_absolute(const std::string& path)

@@ -1,3 +1,4 @@
+#include "../tiger/wire.h"
 #include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
@@ -105,9 +106,11 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 	if(metadata_state==MetadataState_FnSize)
 	{
 		read_bytes = (std::min)(buf_avail, sizeof(unsigned int) - fn_off);
-		unsigned int fn_size = little_endian(static_cast<unsigned int>(public_fn.size()));
-		memcpy(buf, reinterpret_cast<char*>(&fn_size) + fn_off, read_bytes);
-		curr_checksum = urb_adler32(curr_checksum, reinterpret_cast<char*>(&fn_size) + fn_off, static_cast<_u32>(read_bytes));
+		unsigned int fn_size = static_cast<unsigned int>(public_fn.size());
+        char fn_wire[4];
+        tiger_store_le32(fn_size, fn_wire);
+		memcpy(buf, fn_wire + fn_off, read_bytes);
+		curr_checksum = urb_adler32(curr_checksum, fn_wire + fn_off, static_cast<_u32>(read_bytes));
 		fn_off+=read_bytes;
 
 		if(fn_off==sizeof(unsigned int))
@@ -334,9 +337,11 @@ bool FileMetadataPipe::readStdoutIntoBuffer( char* buf, size_t buf_avail, size_t
 	else if (metadata_state == MetadataState_RawFileFnSize)
 	{
 		read_bytes = (std::min)(buf_avail, sizeof(unsigned int) - fn_off);
-		unsigned int fn_size = little_endian(static_cast<unsigned int>(public_fn.size()));
-		memcpy(buf, reinterpret_cast<char*>(&fn_size) + fn_off, read_bytes);
-		curr_checksum = urb_adler32(curr_checksum, reinterpret_cast<char*>(&fn_size) + fn_off, static_cast<_u32>(read_bytes));
+		unsigned int fn_size = static_cast<unsigned int>(public_fn.size());
+        char fn_wire[4];
+        tiger_store_le32(fn_size, fn_wire);
+		memcpy(buf, fn_wire + fn_off, read_bytes);
+		curr_checksum = urb_adler32(curr_checksum, fn_wire + fn_off, static_cast<_u32>(read_bytes));
 		fn_off += read_bytes;
 
 		if (fn_off == sizeof(unsigned int))
@@ -970,6 +975,7 @@ namespace
 
 			std::string buf;
 			buf.resize(bufsize);
+            if (bufsize == 0) { keys.clear(); return true; }
 
             bufsize = llistxattr(fn.c_str(), &buf[0], buf.size());
 
@@ -985,7 +991,8 @@ namespace
 				return false;
 			}
 
-			TokenizeMail(buf, keys, "\0");
+			buf.resize(bufsize);
+            TokenizeMail(buf, keys, std::string(1, '\0'));
 
             for(size_t i=0;i<keys.size();++i)
             {

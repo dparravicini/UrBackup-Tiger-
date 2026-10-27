@@ -8,4 +8,5 @@ mkdir -p "$root/var/urbackup/data" "$root/log" "$root/fixtures"
 ./tiger-fixture create "$root/fixtures/source"
 ./tiger-fixture verify "$root/fixtures/source" 1
 printf 'computername=Tiger-PPC-Lab-20261027\ndefault_dirs=\n' > "$root/var/urbackup/data/settings.cfg"
+touch "$root/.urbackup-tiger-lab"
 echo "Lab initialized with exclusive fixtures; client not started"

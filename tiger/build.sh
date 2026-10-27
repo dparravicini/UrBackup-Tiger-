@@ -9,3 +9,6 @@ export LDFLAGS=""
 ./configure PTHREAD_CFLAGS="" PTHREAD_LIBS="-lpthread" --enable-headless --disable-fortify --disable-clientupdate --enable-embedded-cryptopp --prefix="$HOME/Library/UrBackupTigerLab" > tiger-configure.log 2>&1 || { tail -60 tiger-configure.log; exit 1; }
 /usr/bin/make -j2 urbackupclientbackend urbackupclientctl > tiger-make.log 2>&1 || { tail -100 tiger-make.log; exit 1; }
 /usr/bin/file urbackupclientbackend urbackupclientctl
+
+/usr/bin/gcc -std=c89 -Wall -Wextra -arch ppc -isysroot "$SDK" tiger/fixture.c -o tiger-fixture
+/bin/sh tiger/package.sh

@@ -154,7 +154,17 @@ std::vector<std::string> get_users()
 
 	return ret;
 #else
-	return read_single_k("name", "dscacheutil -q user");
+	std::vector<std::string> ret;
+    if (geteuid() != 0) {
+        struct passwd* pw = getpwuid(geteuid());
+        if (pw) ret.push_back(pw->pw_name);
+        return ret;
+    }
+    setpwent();
+    for (struct passwd* pw = getpwent(); pw != NULL; pw = getpwent())
+        ret.push_back(pw->pw_name);
+    endpwent();
+    return ret;
 #endif
 }
 
@@ -185,7 +195,25 @@ std::vector<std::string> get_groups()
 
 	return ret;
 #else
-	return read_single_k("name", "dscacheutil -q group");
+	std::vector<std::string> ret;
+    if (geteuid() != 0) {
+        int count = getgroups(0, NULL);
+        std::vector<gid_t> ids(count > 0 ? count : 0);
+        if (count > 0) count = getgroups(count, tiger_vector_data(ids));
+        if (count < 0) return ret;
+        ids.resize(count);
+        if (std::find(ids.begin(), ids.end(), getegid()) == ids.end()) ids.push_back(getegid());
+        for (size_t i = 0; i < ids.size(); ++i) {
+            struct group* gr = getgrgid(ids[i]);
+            if (gr) ret.push_back(gr->gr_name);
+        }
+        return ret;
+    }
+    setgrent();
+    for (struct group* gr = getgrent(); gr != NULL; gr = getgrent())
+        ret.push_back(gr->gr_name);
+    endgrent();
+    return ret;
 #endif
 }
 
@@ -256,7 +284,11 @@ int read_val(std::string val_name)
 
 bool write_token( std::string hostname, bool is_user, std::string accountname, const std::string &token_fn, ClientDAO &dao, const std::string& ext_token)
 {
-	int token_fd = creat((token_fn).c_str(), is_user?S_IRWXU:S_IRWXG);
+	mode_t token_mode = is_user ? S_IRWXU : S_IRWXG;
+#ifdef __APPLE__
+    if (geteuid() != 0) token_mode |= S_IRUSR | S_IWUSR;
+#endif
+    int token_fd = creat((token_fn).c_str(), token_mode);
 
 	if(token_fd==-1)
 	{
@@ -344,7 +376,15 @@ bool write_token( std::string hostname, bool is_user, std::string accountname, c
 			return false;
 		}
 
-		if(fchown(token_fd, 0, gr->gr_gid)!=0)
+		uid_t token_owner = 0;
+#ifdef __APPLE__
+        token_owner = geteuid();
+        if (token_owner != 0 && fchmod(token_fd, token_mode) != 0) {
+            close(token_fd);
+            return false;
+        }
+#endif
+        if(fchown(token_fd, token_owner, gr->gr_gid)!=0)
 		{
 			Server->Log("Error changing group ownership of token file \""+ token_fn + "\"", LL_ERROR);
 			close(token_fd);

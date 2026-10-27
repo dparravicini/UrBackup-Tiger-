@@ -2,17 +2,37 @@
 #define URBACKUP_TIGER_SELFTEST_H
 #include "../Server.h"
 #include "compat.h"
+#include "wire.h"
 #include "compat_time.h"
 #include "../common/data.h"
+#include "../stringtools.h"
+#include "../urbackupcommon/os_functions.h"
 #include "../Interface/File.h"
 #include "../cryptoplugin/cryptopp_inc.h"
+#include <pwd.h>
+#include <grp.h>
 #include <sys/stat.h>
 #include <sys/xattr.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+namespace tokens { std::vector<std::string> get_users(); std::vector<std::string> get_groups(); }
 static int tiger_selftest() {
+    std::vector<std::string> attr_names;
+    TokenizeMail(std::string("one\0two\0", 8), attr_names, std::string(1, '\0'));
+    if(attr_names.size()!=2 || attr_names[0]!="one" || attr_names[1]!="two") return 34;
+    printf("PASS multiple NUL-separated extended attribute names\n");
+    char le32[4]; tiger_store_le32(20U, le32);
+    const char expected_len[4] = {20, 0, 0, 0};
+    if(memcmp(le32, expected_len, 4)) return 31;
+    std::vector<std::string> users = tokens::get_users();
+    struct passwd* current = getpwuid(geteuid());
+    if(!current || std::find(users.begin(), users.end(), std::string(current->pw_name))==users.end()) return 32;
+    std::vector<std::string> groups = tokens::get_groups();
+    struct group* group = getgrgid(getegid());
+    if(!group || std::find(groups.begin(), groups.end(), std::string(group->gr_name))==groups.end()) return 33;
+    printf("PASS Tiger native account/group enumeration and metadata length bytes\n");
     const unsigned char expected_wire[] = {0x78,0x56,0x34,0x12,0xef,0xcd,0xab,0x89,0x67,0x45,0x23,0x01};
     CWData wire; wire.addUInt(0x12345678U); wire.addUInt64(0x0123456789abcdefULL);
     if(wire.getDataSize()!=sizeof(expected_wire) || memcmp(wire.getDataPtr(), expected_wire, sizeof(expected_wire))) return 10;
@@ -43,6 +63,9 @@ static int tiger_selftest() {
     unsigned char restored_finder[32]; if(getxattr(fn.c_str(),"com.apple.FinderInfo",restored_finder,32,0,0)!=32 || memcmp(finder,restored_finder,32)) return 22;
     struct stat before, after, link_stat; if(stat(fn.c_str(),&before) || symlink("fixture",ln.c_str())) return 23;
     struct timeval tv[2]; tv[0].tv_sec=946684800; tv[0].tv_usec=0; tv[1]=tv[0];
+    if(os_get_final_path(fn).find("/fixture")==std::string::npos || os_get_final_path(ln)!=os_get_final_path(fn)) return 29;
+    if(os_get_final_path(fn+"-absent").find("fixture-absent")==std::string::npos) return 30;
+    printf("PASS Tiger realpath with caller-provided buffer\n");
     errno=0;
     if(tiger_lutimes(ln.c_str(),tv)!=-1 || errno!=ENOTSUP) return 24;
     if(lstat(ln.c_str(),&link_stat) || stat(fn.c_str(),&after) || before.st_mtime!=after.st_mtime) return 25;

@@ -115,3 +115,57 @@ Nuova identità server dedicata alle fixture: schedulazioni file e immagini
 disabilitate, image_letters vuoto, default_dirs limitato alla fixture.
 Nessun parametro degli altri sei client è stato cambiato. Il backend è
 ora avviato in modalità LAN; riconoscimento e backup ancora da confermare.
+
+## Comunicazione e primi full backup
+
+Il server 2.5.37 riconosce il client 2.0.34-tiger1 come Mac OS X 10.4.11
+Power Macintosh. TCP 35621/35623 raggiungibili, canale di controllo attivo.
+Il primo full ha trasferito contenuti ma presentava un errore di metadati
+con lunghezza nome invertita. Non viene considerato un backup verificato.
+I full successivi hanno terminato con tutti i metadati presenti e zero
+problemi segnalati dal server. Si usa una codifica esplicita little endian
+per il campo lunghezza del canale metadati, verificata sul G4.
+
+Durante l'avvio con directory configurata è emerso un crash riproducibile:
+realpath(path,NULL) non è supportato da Tiger. Si fornisce PATH_MAX come
+buffer e si preserva il comportamento di fallback dell'upstream.
+Autoverifica di percorsi normali, link e ultimo componente assente passata.
+
+Il client Darwin upstream chiamava dscacheutil, assente su Tiger, per utenti
+e gruppi. Ora usa getpwent/getgrent con privilegi root, o l'utente effettivo
+e i suoi gruppi senza root. I file credenziali dei gruppi in modalità utente
+restano di proprietà dell'utente effettivo e leggibili dal processo.
+L'autoverifica verifica la presenza dell'utente/gruppo correnti senza
+stamparne i nomi. Il browser CLI del backup ora elenca il full completato.
+L'installazione per utente può ripristinare i proprietari consentiti dal
+sistema; il servizio root non è stato verificato e non viene installato.
+
+I log grezzi upstream possono includere credenziali di controllo e identificativi
+di canale: non si pubblicano. Il lettore di laboratorio filtra i messaggi
+sensibili; nessun file di stato, chiave o inventario utenti entra nel pacchetto.
+
+## Primo confronto di ripristino: difetti trovati e correzioni
+
+Un restore via CLI in directory separata è terminato secondo il protocollo,
+ma il verificatore ha rilevato resource fork mancante su un file che aveva
+anche FinderInfo e mtime errato su un file con solo resource fork.
+Questi backup di prova precedenti alla correzione NON certificano HFS+.
+
+Causa della prima perdita: l'upstream passava "\0" come std::string di
+separatori, che diventa una stringa vuota. I nomi di più xattr venivano
+concatenati; il sistema vedeva soltanto il primo nome. Si passa un separatore
+NUL di lunghezza uno sia nella lettura backup sia nella rimozione restore.
+Il ripristino rifiuta ora un nome xattr vuoto o contenente NUL, invece di
+applicarlo parzialmente e dichiarare successo. L'autoverifica confronta
+una lista NUL-separated di due attributi con i due nomi attesi.
+
+Causa del tempo errato: scrivere un resource fork cambia mtime su HFS+.
+Per file regolari e directory Darwin, permessi/tempi/flag finali vengono
+applicati dopo tutti gli xattr, con propagazione degli errori. I symlink
+vengono preparati prima degli xattr e conservano il limite documentato.
+La prova full/restore deve essere ripetuta dopo queste correzioni.
+
+La fixture è estesa anche a directory annidata con permessi propri e
+file figlio. L'installazione preparata è per l'utente dell'iBook, non root,
+con LaunchAgent Tiger (OnDemand=false), nessun componente Freebox a runtime.
+L'installazione e l'avvio launchd devono ancora essere verificati.

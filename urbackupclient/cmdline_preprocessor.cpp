@@ -189,6 +189,7 @@ int main(int argc, char* argv[])
 
 		#ifdef __APPLE__
 		if(arg=="--tiger-self-test") return tiger_selftest();
+		if(arg=="--tiger-vardir") { std::cout << VARDIR << std::endl; return 0; }
 #endif
 		if(arg=="--version")
 		{
