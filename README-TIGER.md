@@ -1,7 +1,7 @@
 # UrBackup Tiger PowerPC — porting in corso
 
 Client UrBackup nativo per Mac OS X 10.4.11 PPC, basato su 2.0.34client.
-**Non ancora pronto per backup reali.** Nessun backup/ripristino ancora verificato.
+**Porting in verifica.** Backend e CLI Mach-O PowerPC compilati ed eseguiti sul G4. Autoverifica protocollo/crypto/HFS+ passata; backup e ripristino con server ancora in prova.
 
 - [Analisi, architettura e limiti](docs/tiger/analisi.md)
 - [Valutazione macTLS e macsurf](docs/tiger/mactls.md)
@@ -22,3 +22,10 @@ Non installare ancora il client né configurare avvio automatico. La fase corren
 compila in directory isolate del DevKit. Le prove usano esclusivamente fixture
 temporanee proprie; non modificano directory personali o configurazioni server.
 I log grezzi e gli artefatti .tiger/build non entrano nel repository.
+
+Il controller locale richiede anch'esso lunghezze pacchetto little endian;
+il port corregge questo framing e la selezione della fixture tramite CLI
+è passata sul target. Il laboratorio usa un'identità distinta, frequenze
+automatiche disabilitate e la sola directory di fixture; nessun altro client
+è stato modificato. `tiger/lab/server_api.py` è un client di test per l'API
+FastCGI già presente sul server: non avvia servizi e non salva sessioni.

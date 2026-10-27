@@ -13,3 +13,9 @@ stamp-h1
 .deps/
 
 !tiger/probes/Makefile
+
+curr_build
+package/
+*.tar.gz
+tiger-fixture
+tiger-time-probe

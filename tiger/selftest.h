@@ -1,5 +1,6 @@
 #ifndef URBACKUP_TIGER_SELFTEST_H
 #define URBACKUP_TIGER_SELFTEST_H
+#include "../Server.h"
 #include "compat.h"
 #include "compat_time.h"
 #include "../common/data.h"
@@ -42,10 +43,14 @@ static int tiger_selftest() {
     unsigned char restored_finder[32]; if(getxattr(fn.c_str(),"com.apple.FinderInfo",restored_finder,32,0,0)!=32 || memcmp(finder,restored_finder,32)) return 22;
     struct stat before, after, link_stat; if(stat(fn.c_str(),&before) || symlink("fixture",ln.c_str())) return 23;
     struct timeval tv[2]; tv[0].tv_sec=946684800; tv[0].tv_usec=0; tv[1]=tv[0];
-    if(tiger_lutimes(ln.c_str(),tv)) {perror("setattrlist symlink"); return 24;}
-    if(lstat(ln.c_str(),&link_stat) || stat(fn.c_str(),&after) || link_stat.st_mtime!=946684800 || before.st_mtime!=after.st_mtime) return 25;
+    errno=0;
+    if(tiger_lutimes(ln.c_str(),tv)!=-1 || errno!=ENOTSUP) return 24;
+    if(lstat(ln.c_str(),&link_stat) || stat(fn.c_str(),&after) || before.st_mtime!=after.st_mtime) return 25;
+    if(tiger_lchflags(ln.c_str(),0)) return 27;
+    if(tiger_lutimes(fn.c_str(),tv) || stat(fn.c_str(),&after) || after.st_mtime!=946684800) return 28;
+    printf("LIMIT verified: Darwin 8 HFS+ does not set symlink timestamps; target unchanged\n");
     if(unlink(ln.c_str()) || unlink(fn.c_str()) || rmdir(temp)) return 26;
-    printf("PASS HFS+ ResourceFork, FinderInfo, and symlink timestamps without following target\n");
+    printf("PASS HFS+ ResourceFork, FinderInfo, regular timestamps and symlink flags\n");
     return 0;
 }
 #endif

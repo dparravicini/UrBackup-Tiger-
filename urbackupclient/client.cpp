@@ -4810,7 +4810,7 @@ bool IndexThread::nextLastFilelistItem(SFile& data, str_map* extra, bool with_up
 
 			last_filelist->buf_pos = 0;
 			bool has_read_error = false;
-			_u32 read = last_filelist->f->Read(last_filelist->tiger_vector_data(buf),
+			_u32 read = last_filelist->f->Read(tiger_vector_data(last_filelist->buf),
 				static_cast<_u32>(last_filelist->buf.size()), &has_read_error);
 			if (has_read_error)
 			{

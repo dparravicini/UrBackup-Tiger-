@@ -1,3 +1,4 @@
+#include "../stringtools.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -35,7 +36,7 @@ size_t CTCPStack::Send(SOCKET p, char* buf, size_t msglen)
 {
 	char* buffer=new char[msglen+sizeof(MAX_PACKETSIZE)];
 
-	MAX_PACKETSIZE len=(MAX_PACKETSIZE)msglen;
+	MAX_PACKETSIZE len=little_endian((MAX_PACKETSIZE)msglen);
 
 	memcpy(buffer, &len, sizeof(MAX_PACKETSIZE) );
 	memcpy(&buffer[sizeof(MAX_PACKETSIZE)], buf, msglen);
@@ -59,6 +60,7 @@ char* CTCPStack::getPacket(size_t* packetsize)
 	{
 		MAX_PACKETSIZE len;
 		memcpy(&len, &buffer[0], sizeof(MAX_PACKETSIZE) );
+        len=little_endian(len);
 
 		if(len==0)
 		{

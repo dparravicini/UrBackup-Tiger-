@@ -569,8 +569,12 @@ namespace
                 tv[1].tv_sec = statbuf.st_mtimespec.tv_sec;
                 tv[1].tv_usec = statbuf.st_mtimespec.tv_nsec / 1000;
                 if (tiger_lutimes(fn.c_str(), tv) != 0) {
-                    restore.log("Error setting symlink timestamps: " + fn, LL_ERROR);
-                    ret = false;
+                    if (errno == ENOTSUP) {
+                        restore.log("Tiger HFS+ cannot restore symlink timestamps: " + fn, LL_WARNING);
+                    } else {
+                        restore.log("Error setting symlink timestamps: " + fn, LL_ERROR);
+                        ret = false;
+                    }
                 }
                 if (tiger_lchflags(fn.c_str(), statbuf.st_flags & chflags_mask) != 0) {
                     restore.log("Error setting symlink flags: " + fn, LL_ERROR);

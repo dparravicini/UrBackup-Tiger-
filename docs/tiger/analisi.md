@@ -79,3 +79,39 @@ metadati locali appena disponibile il binario completo; non è ancora passato.
 Server installato: 2.5.37.0. HTTP 55414 non in ascolto alla verifica; FastCGI
 55413 risponde a richieste API e richiede inizializzazione/autenticazione di
 sessione. Non sono stati riavviati processi o modificati backup esistenti.
+
+## Limite HFS+ verificato sul sistema reale
+
+setattrlist modifica correttamente il tempo dei file regolari ma restituisce
+successo senza modificare quello dei link simbolici. La prova C indipendente
+conferma il comportamento. Il sorgente Apple XNU 792.24.17 lo spiega:
+[hfs_vnop_setattr](https://github.com/apple-oss-distributions/xnu/blob/xnu-792.24.17/bsd/hfs/hfs_vnops.c)
+salta esplicitamente gli aggiornamenti dei timestamp per i vnode symlink.
+Il port restituisce ENOTSUP per questa operazione e il restore registra
+un avviso specifico, conservando link e destinazione senza toccare il target.
+Non si dichiara preservato il timestamp dei symlink.
+
+Il primo binario backend Mach-O ppc ha superato confronto byte del protocollo,
+layout sparse extent, vettori noti AES/SHA256 e generazione casuale OS.
+SQLite usa l'opzione upstream SQLITE_WITHOUT_ZONEMALLOC: evita la dipendenza
+OSAtomicCompareAndSwapPtrBarrier assente in Tiger, senza riscrivere atomiche.
+La CLI controller è compilata e --version passa sul G4.
+Le fixture dedicate create e verificate sul G4 comprendono file binario, vuoto,
+Unicode, symlink relativo, FinderInfo, resource fork e file con solo resource
+fork; verifica locale di contenuto, mode, uid/gid e mtime passata.
+
+## Avvio e controllo locale
+
+Backend avviato e autoverifica completa passata, incluso il limite symlink
+verificato. Il controller ha richiesto conversione little endian esplicita
+anche nel proprio tcpstack, distinto da quello del backend.
+add-backupdir/list-backupdirs passati con una sola fixture, senza seguire
+link verso l'esterno e con limite al filesystem. L'avvio internet-only
+richiede impostazioni Internet anche se si vuole soltanto il controllo
+locale: per preparare il laboratorio si usa un endpoint locale chiuso e
+una chiave fittizia, poi si disattiva Internet e si abilita la LAN.
+
+Nuova identità server dedicata alle fixture: schedulazioni file e immagini
+disabilitate, image_letters vuoto, default_dirs limitato alla fixture.
+Nessun parametro degli altri sei client è stato cambiato. Il backend è
+ora avviato in modalità LAN; riconoscimento e backup ancora da confermare.

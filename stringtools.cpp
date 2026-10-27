@@ -419,7 +419,7 @@ std::string convert(long long int i){
 	return ss.str();
 }
 
-#if defined(_WIN64) || defined(_LP64)
+#if defined(_WIN64) || defined(_LP64) || defined(__APPLE__)
 std::string convert(unsigned int i){
 	ostringstream ss;
 	ss << i;
