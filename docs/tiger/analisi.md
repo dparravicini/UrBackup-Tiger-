@@ -218,6 +218,17 @@ c'erano job attivi, il processo è stato chiuso e il servizio systemd è stato
 avviato: 55413, 55414 e 55415 sono in ascolto e la UI risponde HTTP 200.
 Questo problema era di avvio del servizio, non del porting Tiger.
 
+Nota sullo stato "Disabled" della UI: il profilo di laboratorio del client
+Tiger ha gli intervalli `update_freq_incr`, `update_freq_full`,
+`update_freq_image_incr` e `update_freq_image_full` impostati a `-86400`.
+Significa che i backup pianificati sono intenzionalmente disabilitati; i test
+sono stati eseguiti con backup avviati manualmente. La UI 2.5.37 distingue
+questo caso da "No recent backup" e mostra "Disabled" in verde. "Not supported"
+per le immagini è invece atteso su Tiger/PowerPC. Per riattivare la
+pianificazione basta impostare frequenze positive nelle impostazioni del
+client; la modifica non è stata applicata perché introdurrebbe job automatici
+nel laboratorio.
+
 Limiti residui: Tiger HFS+ non consente di impostare il timestamp dei symlink;
 il solo avvio tramite LaunchAgent non è ancora stato verificato. Il server
 upstream conserva il watchdog di cinque minuti e non esiste ancora un ACK
