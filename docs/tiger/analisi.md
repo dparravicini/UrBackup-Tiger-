@@ -169,3 +169,58 @@ La fixture è estesa anche a directory annidata con permessi propri e
 file figlio. L'installazione preparata è per l'utente dell'iBook, non root,
 con LaunchAgent Tiger (OnDemand=false), nessun componente Freebox a runtime.
 L'installazione e l'avvio launchd devono ancora essere verificati.
+
+## Verifica incrementale e chiusura dello stato restore (2026-10-28)
+
+Stato iniziale rilevato: il client Tiger completava i restore e conservava i
+metadati HFS+, ma il server poteva mostrare un processo `action=8` con
+`pcdone=0`. Nel database il restore 2 risultava `done=1`, `success=0`, con
+chiusura alle 21:50:21, esattamente al timeout del watchdog di cinque minuti.
+Il client aveva invece registrato `Restore finished successfully` alle 22:45:21
+locali (21:45:21 UTC). Non era quindi un processo realmente attivo: era stato
+perso il messaggio di completamento sul canale di controllo.
+
+Causa verificata: durante restore molto piccoli il `FileClient` va in timeout,
+si riconnette e aggiunge un nuovo canale in coda a `channel_pipes`.
+`sendMessageToChannel` cercava il primo canale con il token del server, cioè il
+più vecchio, senza scartare canali chiusi o in errore. `RESTORE DONE` poteva
+quindi essere scritto su un socket obsoleto; il server non aggiornava il DB e
+chiudeva il restore come fallito dopo cinque minuti.
+
+Correzione: la selezione dei canali per log, avanzamento e completamento ora
+parte dal più recente, ignora canali in uscita, nulli o con errore e prosegue
+con gli altri se una scrittura non riesce. Non cambia il protocollo e resta
+compatibile con il server upstream.
+
+Verifica eseguita sul G4 con fixture dedicata:
+
+1. backup incrementale server id 3480, `incremental=1`, `complete=1`,
+   `done=1` e nessun problema;
+2. fixture mutata in modo controllato (contenuto, mtime e resource fork,
+   inclusa la variante con solo resource fork);
+3. restore dell'incrementale nel nuovo path di laboratorio
+   `fixtures/restored-incr-fix-20261028`;
+4. restore server id 3 chiuso in due secondi con `done=1`, `success=1`;
+5. verifica fixture PASS per contenuto, mode, uid/gid, mtime, resource fork,
+   FinderInfo, Unicode, directory annidata e symlink relativo;
+6. stato live subito dopo: client online, lista processi vuota, nessun
+   `action=8` residuo.
+
+Durante il test il client ha ripresentato lo stesso timeout del `FileClient` e
+la stessa riconnessione che avevano causato il difetto: il server ha comunque
+ricevuto il completamento. Questo distingue la verifica dalla semplice
+rimozione del record.
+
+Nota operativa sulla web UI: al riavvio di verifica il processo manuale del
+server aveva trovato la porta HTTP 55414 già occupata da una vecchia istanza,
+pur continuando a servire la porta client 55413. Dopo aver verificato che non
+c'erano job attivi, il processo è stato chiuso e il servizio systemd è stato
+avviato: 55413, 55414 e 55415 sono in ascolto e la UI risponde HTTP 200.
+Questo problema era di avvio del servizio, non del porting Tiger.
+
+Limiti residui: Tiger HFS+ non consente di impostare il timestamp dei symlink;
+il solo avvio tramite LaunchAgent non è ancora stato verificato. Il server
+upstream conserva il watchdog di cinque minuti e non esiste ancora un ACK
+applicativo bilaterale per `RESTORE DONE`; la correzione elimina la selezione
+del canale obsoleto osservata, ma non trasforma il protocollo in una consegna
+con conferma end-to-end.

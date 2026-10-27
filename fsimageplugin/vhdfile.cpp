@@ -1,3 +1,4 @@
+#include "../tiger/compat.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2016 Martin Raiber
@@ -784,7 +785,7 @@ bool VHDFile::Read(char* buffer, size_t bsize, size_t &read)
 				return false;
 			}
 
-			if(file->Read(reinterpret_cast<char*>(bitmap.data()), bitmap_size)!=bitmap_size)
+			if(file->Read(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size)!=bitmap_size)
 			{
 				Server->Log("Error reading bitmap", LL_ERROR);
 				return false;
@@ -919,11 +920,11 @@ _u32 VHDFile::Write(const char *buffer, _u32 bsize, bool *has_error)
 				Server->Log("Seeking failed", LL_ERROR);
 
 			if(!new_block)
-				file->Read(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+				file->Read(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 			else
 			{
-				memset(bitmap.data(), 0, bitmap_size );
-				_u32 rc=file->Write(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+				memset(tiger_vector_data(bitmap), 0, bitmap_size );
+				_u32 rc=file->Write(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 				if(rc!=bitmap_size)
 				{
 					Server->Log("Writing bitmap failed", LL_ERROR);
@@ -986,7 +987,7 @@ _u32 VHDFile::Write(const char *buffer, _u32 bsize, bool *has_error)
 		if(!fast_mode)
 		{
 			file->Seek(dataoffset);
-			_u32 rc=file->Write(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+			_u32 rc=file->Write(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 			if(rc!=bitmap_size)
 			{
 				Server->Log("Writing bitmap failed", LL_ERROR);
@@ -1073,7 +1074,7 @@ bool VHDFile::has_block(bool use_parent)
 			return false;
 		}
 
-		if(file->Read(reinterpret_cast<char*>(bitmap.data()), bitmap_size)!=bitmap_size)
+		if(file->Read(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size)!=bitmap_size)
 		{
 			Server->Log("Error reading bitmap", LL_ERROR);
 			return false;
@@ -1104,7 +1105,7 @@ void VHDFile::switchBitmap(uint64 new_offset)
 	if(fast_mode && !read_only && bitmap_dirty && bitmap_offset!=0)
 	{
 		file->Seek(bitmap_offset);
-		_u32 rc=file->Write(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+		_u32 rc=file->Write(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 		if(rc!=bitmap_size)
 		{
 			Server->Log("Writing bitmap failed", LL_ERROR);
@@ -1427,13 +1428,13 @@ bool VHDFile::makeFull( _i64 fs_offset, IVHDWriteCallback* write_callback)
 					&& has_block(true) )
 				{
 					bool has_error = false;
-					if(Read(buffer.data(), sector_size)!=sector_size)
+					if(Read(tiger_vector_data(buffer), sector_size)!=sector_size)
 					{
 						Server->Log("Error converting incremental to full image. Cannot read from parent VHD file at position "+convert(i), LL_WARNING);
 						return false;
 					}
 					
-					if(!write_callback->writeVHD(i, buffer.data(), sector_size))
+					if(!write_callback->writeVHD(i, tiger_vector_data(buffer), sector_size))
 					{
 						Server->Log("Error converting incremental to full image. Cannot write to VHD file at position "+convert(i), LL_WARNING);
 						return false;
@@ -1531,11 +1532,11 @@ bool VHDFile::setUnused(_i64 unused_start, _i64 unused_end)
 				Server->Log("Seeking failed", LL_ERROR);
 
 			if (!new_block)
-				file->Read(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+				file->Read(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 			else
 			{
-				memset(bitmap.data(), 0, bitmap_size);
-				_u32 rc = file->Write(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+				memset(tiger_vector_data(bitmap), 0, bitmap_size);
+				_u32 rc = file->Write(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 				if (rc != bitmap_size)
 				{
 					Server->Log("Writing bitmap failed", LL_ERROR);
@@ -1574,7 +1575,7 @@ bool VHDFile::setUnused(_i64 unused_start, _i64 unused_end)
 				{
 					zero_buf.resize(wantwrite);
 				}
-				_u32 rc = file->Write(dataoffset + bitmap_size + blockoffset, zero_buf.data(), (_u32)wantwrite);
+				_u32 rc = file->Write(dataoffset + bitmap_size + blockoffset, tiger_vector_data(zero_buf), (_u32)wantwrite);
 				if (rc != wantwrite)
 				{
 					Server->Log("Writing to file failed (2)", LL_ERROR);
@@ -1600,7 +1601,7 @@ bool VHDFile::setUnused(_i64 unused_start, _i64 unused_end)
 		if (!fast_mode)
 		{
 			file->Seek(dataoffset);
-			_u32 rc = file->Write(reinterpret_cast<char*>(bitmap.data()), bitmap_size);
+			_u32 rc = file->Write(reinterpret_cast<char*>(tiger_vector_data(bitmap)), bitmap_size);
 			if (rc != bitmap_size)
 			{
 				Server->Log("Writing bitmap failed", LL_ERROR);

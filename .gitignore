@@ -19,3 +19,6 @@ package/
 *.tar.gz
 tiger-fixture
 tiger-time-probe
+
+__pycache__/
+*.py[cod]

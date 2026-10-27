@@ -23,6 +23,9 @@ chmod 700 "$root/sbin/urbackupclientbackend" "$root/sbin/urbackupclientctl"
 touch "$root/.urbackup-tiger-lab"
 "$root/sbin/urbackupclientbackend" --tiger-self-test
 if test "${1-}" = '--enable-launchd'; then
+ if ! test -f "$root/var/urbackup/data/settings.cfg"; then
+  echo 'Configure explicit lab backup directories before enabling startup' >&2; exit 8
+ fi
  mkdir -p "$HOME/Library/LaunchAgents"
  plist="$HOME/Library/LaunchAgents/org.urbackup.tiger.lab.plist"
  if test -e "$plist"; then echo 'LaunchAgent already exists; inspect before replacing' >&2; exit 6; fi

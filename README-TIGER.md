@@ -1,9 +1,10 @@
 # UrBackup Tiger PowerPC — porting in corso
 
 Client UrBackup nativo per Mac OS X 10.4.11 PPC, basato su 2.0.34client.
-**Porting in verifica.** Backend e CLI Mach-O PowerPC compilati ed eseguiti sul G4. Autoverifica protocollo/crypto/HFS+ passata; backup e ripristino con server ancora in prova.
+**Porting in verifica.** Backend e CLI Mach-O PowerPC compilati ed eseguiti sul G4. Backup incrementale e restore incrementale verificati su fixture dedicata, inclusi contenuti, resource fork, FinderInfo, permessi e symlink. La chiusura del restore sul server non lascia più processi fantasma nel caso osservato.
 
 - [Analisi, architettura e limiti](docs/tiger/analisi.md)
+- Stato restore e test incrementale: verificati il 2026-10-28; resta il limite HFS+ sui timestamp dei symlink.
 - [Valutazione macTLS e macsurf](docs/tiger/mactls.md)
 - `tiger/probes`: prova reale del profilo macTLS e resource fork.
 - `tiger/build.sh`: build headless GCC 4.0.1 con SDK 10.4u.

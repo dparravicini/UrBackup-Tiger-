@@ -2990,14 +2990,18 @@ bool ClientConnector::sendMessageToChannel( const std::string& msg, int timeoutm
 
 	do
 	{
-		for(size_t i=0;i<channel_pipes.size();++i)
+		for(size_t i=channel_pipes.size();i>0;--i)
 		{
-			if(channel_pipes[i].token == identity)
+			size_t channel_idx = i-1;
+			if(channel_pipes[channel_idx].token == identity
+				&& channel_pipes[channel_idx].state != SChannel::EChannelState_Exit
+				&& channel_pipes[channel_idx].pipe != NULL
+				&& !channel_pipes[channel_idx].pipe->hasError())
 			{
-				CTCPStack tmpstack(channel_pipes[i].internet_connection);
-				if(tmpstack.Send(channel_pipes[i].pipe, msg)!=msg.size())
+				CTCPStack tmpstack(channel_pipes[channel_idx].internet_connection);
+				if(tmpstack.Send(channel_pipes[channel_idx].pipe, msg)!=msg.size())
 				{
-					return false;
+					continue;
 				}
 
 				return true;
