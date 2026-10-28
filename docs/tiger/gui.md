@@ -295,3 +295,55 @@ UrBackupTiger-2.0.34-ppc.tar.gz
 
 Copie finali: `/Volumes/Daniele/Desktop` sul G4 e `~/Desktop` sull'host.
 Il pacchetto non contiene credenziali, log grezzi o dati personali.
+
+## Backup di `/etc`
+
+Su Tiger `/etc` e' un collegamento a `/private/etc`. Il backend gira come
+l'utente normale `daniele`, quindi non puo' leggere alcuni file e directory
+riservati a `root`. Senza esclusioni la costruzione dell'indice si interrompe
+su `/private/etc/cups/certs` con `Permission denied (13)` e il server elimina
+il backup parziale.
+
+Non e' necessario eseguire il backend come root. La soluzione verificata e'
+escludere soltanto gli elementi root-only; tutto il resto di `/etc` viene
+salvato. I percorsi vanno scritti nella forma canonica `/private/etc/...` e
+separati con `;`:
+
+```sh
+B="/Applications/UrBackup Client.app/Contents/Resources/bin/urbackupclientctl"
+D="$HOME/Library/Application Support/UrBackupTiger/var/urbackup"
+EXCLUDES='/private/etc/cups/certs;/private/etc/cups/certs/*;/private/etc/cups/classes.conf;/private/etc/cups/printers.conf;/private/etc/cups/printers.conf.O;/private/etc/master.passwd;/private/etc/openldap/slapd.conf.default;/private/etc/racoon/psk.txt;/private/etc/racoon/remote/anonymous.conf;/private/etc/ssh_host_dsa_key;/private/etc/ssh_host_key;/private/etc/ssh_host_rsa_key;/private/etc/sudoers'
+"$B" set-settings --pw-file "$D/pw_change.txt" \
+  -k exclude_files -v "$EXCLUDES"
+```
+
+Per verificare quali altri percorsi non sono leggibili dall'utente del client:
+
+```sh
+find -H /etc -type d -print | while IFS= read -r p; do
+  test -r "$p" || echo "$p"
+done
+find -H /etc -type f -print | while IFS= read -r p; do
+  test -r "$p" || echo "$p"
+done
+```
+
+Verifica eseguita il 2026-10-28 con un backup completo manuale:
+
+```sh
+"$B" start -f --pw-file "$D/pw_change.txt"
+```
+
+Esito:
+
+- client: `Completed successfully`, `success: true`;
+- server: record del backup `complete=1`, `done=1`, 4.576.842 byte;
+- contenuto: 653 file sotto `etc`, inclusi `hostconfig`, `sshd_config` e
+  `rc.local`;
+- esclusi: i 12 elementi root-only dell'elenco precedente, tra cui
+  `master.passwd`, `sudoers`, le chiavi SSH private e i certificati CUPS.
+
+I messaggi `Creating shadowcopy ... failed` relativi ai due collegamenti
+simbolici di `localtime` e `resolv.conf` non bloccano il backup: il record
+finale sul server e' completo. Restano esclusi i segreti locali non leggibili
+dal client, non l'intera directory `/etc`.

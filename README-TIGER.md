@@ -10,6 +10,9 @@ Backend, CLI e GUI wx sono Mach-O PowerPC e vengono eseguiti sul G4.
 - Impostazioni: i tre tab `Backup File`, `Client` e `Internet` si attivano e i
   campi sono modificabili; il salvataggio e' stato verificato sul G4.
 - Log e Infos: aperti senza il crash CoreText osservato nelle prime build.
+- Backup di `/etc`: verificato completo sul server. Il client esclude soltanto
+  i file root-only non leggibili dall'utente `daniele`, come descritto in
+  `docs/tiger/gui.md`.
 - Pacchetto: app in `/Applications`, DMG e TAR redistribuibili generati da
   `tiger/package.sh`. Il bundle bit HFS e' impostato sia nell'app installata
   sia nella copia dentro il DMG.
@@ -35,6 +38,10 @@ I dati utente sono separati per account in:
 
 Il pacchetto non contiene server, credenziali o dati personali. Il server
 UrBackup va configurato nelle Impostazioni del client.
+
+Se si abilita il backup di `/etc`, configurare prima le esclusioni per i file
+di sistema non leggibili dall'utente del client. La procedura verificata e'
+in [Porting GUI wx e verifiche Tiger](docs/tiger/gui.md#backup-di-etc).
 
 ## Build e pacchetto
 
