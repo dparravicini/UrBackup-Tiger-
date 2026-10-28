@@ -1,0 +1,57 @@
+--- a/src/osx/carbon/font.cpp
++++ b/src/osx/carbon/font.cpp
+@@ -394,9 +394,13 @@
+                 break;
+         }
+         m_ctFont.reset(CTFontCreateUIFontForLanguage( uifont, (CGFloat) size, NULL ));
+-        wxCFRef<CTFontDescriptorRef> descr;
+-        descr.reset( CTFontCopyFontDescriptor( m_ctFont ) );
+-        m_info.Init(descr);
++        if ( m_ctFont.get() != NULL )
++        {
++            wxCFRef<CTFontDescriptorRef> descr;
++            descr.reset( CTFontCopyFontDescriptor( m_ctFont ) );
++            if ( descr.get() != NULL )
++                m_info.Init(descr);
++        }
+     }
+ #if wxOSX_USE_ATSU_TEXT
+     {
+@@ -1112,15 +1116,21 @@
+ void wxNativeFontInfo::Init(CTFontDescriptorRef descr)
+ {
+     Init();
++
++    if ( descr == NULL )
++        return;
+ 
+     wxCFRef< CFNumberRef > sizevalue( (CFNumberRef) CTFontDescriptorCopyAttribute( descr, kCTFontSizeAttribute ) );
+     float fsize;
+-    if ( CFNumberGetValue( sizevalue , kCFNumberFloatType , &fsize ) )
++    if ( sizevalue.get() != NULL && CFNumberGetValue( sizevalue , kCFNumberFloatType , &fsize ) )
+         m_pointSize = (int)( fsize + 0.5 );
+ 
+     wxCFRef< CFDictionaryRef > traitsvalue( (CFDictionaryRef) CTFontDescriptorCopyAttribute( descr, kCTFontTraitsAttribute ) );
+     CTFontSymbolicTraits traits;
+-    if ( CFNumberGetValue((CFNumberRef) CFDictionaryGetValue(traitsvalue,kCTFontSymbolicTrait),kCFNumberIntType,&traits) )
++    CFNumberRef traitvalue = traitsvalue.get() != NULL
++        ? (CFNumberRef) CFDictionaryGetValue(traitsvalue, kCTFontSymbolicTrait)
++        : NULL;
++    if ( traitvalue != NULL && CFNumberGetValue(traitvalue, kCFNumberIntType, &traits) )
+     {
+         if ( traits & kCTFontItalicTrait )
+             m_style = wxFONTSTYLE_ITALIC;
+@@ -1129,9 +1139,11 @@
+     }
+ 
+     wxCFStringRef familyName( (CFStringRef) CTFontDescriptorCopyAttribute(descr, kCTFontFamilyNameAttribute));
+-    m_faceName = familyName.AsString();
++    if ( familyName.get() != NULL )
++        m_faceName = familyName.AsString();
+     
+-    UpdateNamesMap(m_faceName, descr);
++    if ( !m_faceName.empty() )
++        UpdateNamesMap(m_faceName, descr);
+ }
+ 
+ void wxNativeFontInfo::EnsureValid()

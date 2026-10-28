@@ -87,19 +87,61 @@ void ConfigPath::OnClickAbort(wxCommandEvent &evt)
 
 void ConfigPath::OnClickNew(wxCommandEvent &evt)
 {
-	wxDirDialog ed(this, _("Please select the directory that will be backed up."), wxEmptyString, wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST );
-	int rc=ed.ShowModal();
-	if(rc==wxID_OK)
+	wxDialog dlg(this, wxID_ANY, _("Add path"));
+
+	wxBoxSizer *sizer = new wxBoxSizer(wxVERTICAL);
+	wxStaticText *label = new wxStaticText(&dlg, wxID_ANY,
+		wxT("Inserisci il percorso completo della cartella da salvare (es. /etc)."),
+		wxDefaultPosition, wxDefaultSize, 0);
+	label->Wrap(420);
+	sizer->Add(label, 0, wxLEFT|wxRIGHT|wxTOP, 10);
+
+	wxTextCtrl *pathCtrl = new wxTextCtrl(&dlg, wxID_ANY, wxT("/"),
+		wxDefaultPosition, wxSize(420, -1));
+	sizer->Add(pathCtrl, 0, wxEXPAND|wxLEFT|wxRIGHT|wxTOP, 10);
+
+	wxSizer *buttons = dlg.CreateButtonSizer(wxOK|wxCANCEL);
+	if (buttons != NULL)
+		sizer->Add(buttons, 0, wxEXPAND|wxALL, 10);
+
+	dlg.SetSizerAndFit(sizer);
+	dlg.Centre();
+	pathCtrl->SetFocus();
+	pathCtrl->SelectAll();
+
+	if (dlg.ShowModal() != wxID_OK)
+		return;
+
+	wxString path = pathCtrl->GetValue();
+	path.Trim(true).Trim(false);
+	if (path.Len() > 1 && path.Right(1) == wxT('/'))
+		path.RemoveLast();
+
+	if (!wxIsAbsolutePath(path) || !wxDirExists(path))
 	{
-		listbox->Append(ed.GetPath() );
-		SBackupDir ad;
-		ad.path=ed.GetPath();
-		ad.name=getDefaultDirname(ad.path.wc_str());
-		ad.group=0;
-		ad.id=0;
-		dirs.push_back(ad);
-		mod=true;
+		wxMessageBox(wxT("Il percorso deve essere una cartella esistente e assoluta (es. /etc)."),
+			_("Add path"), wxOK|wxICON_ERROR, this);
+		return;
 	}
+
+	for (size_t i=0; i<dirs.size(); ++i)
+	{
+		if (dirs[i].path == path)
+		{
+			wxMessageBox(wxT("Questa cartella è già presente nell'elenco."),
+				_("Add path"), wxOK|wxICON_ERROR, this);
+			return;
+		}
+	}
+
+	listbox->Append(path);
+	SBackupDir ad;
+	ad.path=path;
+	ad.name=getDefaultDirname(ad.path.wc_str());
+	ad.group=0;
+	ad.id=0;
+	dirs.push_back(ad);
+	mod=true;
 }
 
 void ConfigPath::OnClickDel(wxCommandEvent &evt)

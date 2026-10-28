@@ -9,26 +9,35 @@ Backend, CLI e GUI wx sono Mach-O PowerPC e vengono eseguiti sul G4.
 - GUI wx Carbon: funzionante con backend attivo.
 - Impostazioni: i tre tab `Backup File`, `Client` e `Internet` si attivano e i
   campi sono modificabili; il salvataggio e' stato verificato sul G4.
+- Percorsi di backup: apertura della finestra, aggiunta e rimozione di una
+  cartella, salvataggio, riavvio del backend e persistenza verificati sul G4.
+  Il selettore nativo Tiger non viene usato perche' `NavigationServices`
+  provoca un crash; la GUI chiede il percorso completo della cartella.
 - Log e Infos: aperti senza il crash CoreText osservato nelle prime build.
 - Backup di `/etc`: verificato completo sul server. Il client esclude soltanto
   i file root-only non leggibili dall'utente `daniele`, come descritto in
   `docs/tiger/gui.md`.
+- Backup incrementale con il bundle finale installato in `/Applications`:
+  avviato dal server e completato con `Completed successfully`.
 - Pacchetto: app in `/Applications`, DMG e TAR redistribuibili generati da
   `tiger/package.sh`. Il bundle bit HFS e' impostato sia nell'app installata
   sia nella copia dentro il DMG.
-- Menu bar: implementata con `NSStatusItem` nativa Tiger. L'icona e' stata
-  vista nelle prove precedenti, ma nella sessione console attuale del G4 gli
-  status item di terze parti non vengono mostrati nemmeno da un'app minima di
-  test. Il limite e' quindi dell'ambiente Tiger/SystemUIServer di quella
-  sessione, non della GUI. Dettagli e prove in `docs/tiger/gui.md`.
+- Accesso alla GUI: il bundle si avvia da `Applicazioni` e le finestre
+  rispondono. Nella sessione Tiger usata per la verifica non sono state viste
+  ne' l'icona nel Dock ne' lo status item nella barra dei menu, quindi il menu
+  non e' un punto di accesso verificato. Usare i comandi indicati sotto.
+  Dettagli e prove in `docs/tiger/gui.md`.
 
 ## Installazione
 
 1. Aprire `UrBackupTiger-2.0.34-ppc.dmg`.
 2. Trascinare `UrBackup Client` in `Applicazioni`.
 3. Avviarlo da `Applicazioni`: il backend parte automaticamente.
-4. Aprire `Impostazioni` dal menu dell'icona o con:
+4. Aprire `Impostazioni` con:
    `/Applications/UrBackup\ Client.app/Contents/MacOS/urbackupclientgui settings`
+5. Per configurare le cartelle usare `paths`; la GUI chiede il percorso
+   completo, ad esempio `/etc`, e non apre il selettore nativo instabile:
+   `/Applications/UrBackup\ Client.app/Contents/MacOS/urbackupclientgui paths`
 
 I dati utente sono separati per account in:
 

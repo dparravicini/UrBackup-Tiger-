@@ -63,8 +63,9 @@ Configurazione usata:
 
 `tiger/deps/wx-3.0.5.1-tiger-10.4.patch` è stato rigenerato per diff diretto
 contro il tarball ufficiale `wxWidgets-3.0.5.1.tar.bz2`: 741 righe, 18 file.
-Va applicata anche `tiger/deps/wx-3.0.5.1-tiger-uifont.patch`, che contiene la
-correzione CoreText finale. Insieme coprono:
+Vanno applicate anche `tiger/deps/wx-3.0.5.1-tiger-uifont.patch` e
+`tiger/deps/wx-3.0.5.1-tiger-fontattrs.patch`, che contengono le correzioni
+CoreText finali. Insieme coprono:
 
 - `AudioServices` e `HIWindowGetAvailablePositioningBounds`, assenti
   nell'SDK 10.4 (`utils.cpp`, `utils_osx.cpp`, `nonownedwnd.cpp`);
@@ -89,6 +90,10 @@ correzione CoreText finale. Insieme coprono:
 - `kEventControlFocusPartChanged = 164`, conversione del mouse con
   `GetGlobalMouse`/`HIPointConvert` e font di controllo con
   `SetControlFontStyle` (`window.cpp`);
+- attributi CoreText nulli su Tiger: `wxNativeFontInfo::Init` e la creazione
+  del font di sistema ora controllano descrittore, dimensione, traits e nome
+  famiglia prima di chiamare `CFNumberGetValue` (`font.cpp`, patch
+  `wx-3.0.5.1-tiger-fontattrs.patch`);
 - ritocchi minori in `dataobj.cpp`, `dcprint.cpp`, `fontdlg.cpp`,
   `region.cpp`, `core/printmac.cpp`.
 
@@ -175,9 +180,9 @@ Causa individuata nel codice, non presunta:
   `Only the wxTBI_DOCK implementation of wxTaskBarIcon on Mac-Carbon is
   currently supported!`. Su Carbon quindi `wxTaskBarIcon` coincide con
   l'icona del Dock dell'applicazione (`SetApplicationDockTileImage`).
-- Il bundle dichiara `LSUIElement=1` in `osx_installer/info.plist`, quindi
-  l'applicazione è invisibile nel Dock: l'icona viene impostata su una tile
-  che non esiste e non è visibile da nessuna parte.
+- Il bundle usato in quella prova dichiarava `LSUIElement=1` in
+  `osx_installer/info.plist`, quindi l'applicazione era invisibile nel Dock:
+  l'icona veniva impostata su una tile che non esisteva.
 
 Non è un errore di build né di linkaggio: `SetIcon` restituisce successo
 (nessun `Setting icon failed.` nei log) e il backend IPC funziona. È una
@@ -199,11 +204,13 @@ Va mantenuto lo stesso set di icone originali e lo stesso menu; non è una
 nuova GUI, è l'implementazione mancante dell'host toolkit. Fino a quel
 momento il requisito "icona nella menu bar" resta **non soddisfatto**.
 
-### Alternativa immediata, senza nuovo codice
+### Alternativa senza nuovo codice
 
 Rimuovere `LSUIElement` dal bundle: l'icona del tray comparirebbe nel Dock
 con il menu funzionante (implementazione dock di wx Carbon). Non è la menu
-bar e cambia il comportamento originale, quindi non è stata applicata.
+bar e cambia il comportamento originale. È stata applicata nel bundle finale,
+ma nella sessione usata per la verifica l'icona del Dock non è comparsa:
+pertanto non viene considerata una soluzione verificata.
 
 ## Stato finale al 2026-10-28 23:00
 
@@ -243,17 +250,21 @@ Sono stati verificati:
 - null dereference in `GUISettings` corretto;
 - `SetFile -a B` sull'app, sia nello stage sia nella copia del DMG: senza
   bundle bit Tiger rifiuta l'apertura con LaunchServices `-10829`;
+- rimosso `LSUIElement` dal bundle per consentire l'avvio come applicazione
+  normale; l'icona nel Dock non è però comparsa nella sessione di prova;
 - tray implementato con `NSStatusItem` e caricamento diretto dell'ICO in
   `NSBitmapImageRep` RGBA, per conservare alpha e trasparenza.
 
 ### Limite residuo della menu bar
 
-Nella sessione console attuale del G4 l'icona UrBackup non e' visibile. Non e'
+Nella sessione console del G4 usata per l'ultima verifica non erano visibili
+ne' l'icona UrBackup nel Dock ne' lo status item nella barra dei menu. Non e'
 un errore del codice applicativo: un'app minima che crea soltanto un
 `NSStatusItem` con titolo `TEST4` non compare, pur essendo il processo vivo e
 nonostante il riavvio di `SystemUIServer`. Nelle prove precedenti l'icona
 UrBackup era invece stata vista nella barra dei menu, quindi il comportamento
-e' legato allo stato della sessione grafica Tiger, non alla build.
+della barra e' legato allo stato della sessione grafica Tiger, non alla build.
+L'icona nel Dock resta non verificata e non viene dichiarata funzionante.
 
 Sono stati provati senza successo:
 
@@ -282,8 +293,10 @@ Sorgente di build sul G4:
 Comandi usati:
 
 ```sh
-PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin   make -j2 urbackupclientbackend urbackupclientctl urbackupclientgui
-PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin   sh tiger/package.sh
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+  make -j2 urbackupclientbackend urbackupclientctl urbackupclientgui
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+  sh tiger/package.sh
 ```
 
 Artefatti:
@@ -295,6 +308,92 @@ UrBackupTiger-2.0.34-ppc.tar.gz
 
 Copie finali: `/Volumes/Daniele/Desktop` sul G4 e `~/Desktop` sull'host.
 Il pacchetto non contiene credenziali, log grezzi o dati personali.
+
+## Correzione percorsi GUI al 2026-10-29
+
+### Primo crash: font di `wxListBox`
+
+La build precedente chiudeva `urbackupclientgui paths` durante la creazione
+della lista. Il report mostrava:
+
+```text
+CFNumberGetValue
+wxNativeFontInfo::Init(CTFontDescriptorRef)
+wxFontRefData::wxFontRefData(wxOSXSystemFont, int)
+wxListBox::GetClassDefaultAttributes
+GUIConfigPath::GUIConfigPath
+```
+
+Su CoreText 1.0.4 di Tiger il descrittore del font di sistema puo' non avere
+gli attributi di dimensione o traits. La patch
+`tiger/deps/wx-3.0.5.1-tiger-fontattrs.patch` aggiunge i controlli nulli. La
+libreria statica corretta deve essere installata anche nel prefisso usato dal
+link della GUI, non solo nella directory di build:
+
+```sh
+cp build-carbon-ppc-nogl/lib/libwx_osx_carbonu-3.0.a \
+  /Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/lib/
+ranlib /Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/lib/libwx_osx_carbonu-3.0.a
+```
+
+Senza il secondo passaggio il binario ricompilato continuava a contenere il
+vecchio codice: verificato confrontando il disassemblato della funzione nel
+binario e nell'oggetto `monolib_carbon_font.o`.
+
+### Secondo crash: selettore directory nativo
+
+Con la lista ora funzionante, il click su `Aggiungi percorso` apriva
+`wxDirDialog` e chiudeva l'app in:
+
+```text
+CFMessagePortCreateRunLoopSource
+InitializeDragIPC
+TBrowseDialog::SetupDragHandlers
+NavChooseFolderDialog::InitDialog
+wxDirDialog::ShowModal
+ConfigPath::OnClickNew
+```
+
+Il crash e' dentro `NavigationServices` di Tiger, non in UrBackup. La GUI ora
+usa una finestra wx semplice con un campo di testo: l'utente inserisce il
+percorso assoluto completo, che viene validato con `wxIsAbsolutePath` e
+`wxDirExists`, controllato contro i duplicati e poi aggiunto alla lista. Non
+viene piu' istanziato `wxDirDialog`/`NavChooseFolderDialog`.
+
+### Prova GUI completa
+
+Eseguita sul G4 il 2026-10-29 con la configurazione utente reale:
+
+1. `urbackupclientgui paths` resta attivo e mostra `/etc`.
+2. `Aggiungi percorso` apre la finestra senza crash.
+3. Inserito `/Volumes/Daniele/Library/UrBackupTigerLab/gui-path-test`.
+4. Dopo `Ok`, `urbackupclientctl list-backupdirs --raw` restituisce sia `/etc`
+   sia la directory di prova con `id 5`.
+5. Riavviato il backend con gli stessi `URBACKUP_TIGER_*` della GUI: entrambe
+   le directory sono ancora presenti, quindi il salvataggio e' persistente.
+6. Selezionata la directory di prova, usato `Rimuovi percorso`, quindi `Ok`:
+   il backend restituisce soltanto `/etc`.
+
+La directory di prova e' stata eliminata. Il profilo resta con il solo `/etc`.
+Durante una prova precedente il backend aveva accettato i PONG ma non risposto
+a `GET BACKUP DIRS`; un riavvio pulito del backend con
+`URBACKUP_TIGER_VARDIR` e `URBACKUP_TIGER_DATADIR` corretti ha ripristinato la
+risposta. Questo caso va distinto dall'errore GUI ed e' il motivo per cui il
+test finale include un riavvio esplicito del backend.
+
+### Verifica finale del pacchetto installato
+
+Il bundle del DMG e' stato copiato in `/Applications` e avviato con
+`urbackupclientgui paths`; la finestra ha mostrato `/etc`. Con lo stesso
+bundle e lo stesso backend e' stato quindi eseguito:
+
+```sh
+urbackupclientctl start -i -p \
+  "$HOME/Library/Application Support/UrBackupTiger/var/urbackup/pw_change.txt"
+```
+
+Esito: `Waiting for server to start backup... done`, `Preparing...` e
+`Completed successfully`.
 
 ## Backup di `/etc`
 

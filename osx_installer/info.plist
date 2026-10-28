@@ -24,8 +24,6 @@
   <integer>$version_maj$</integer>
   <key>IFMinorVersion</key>
   <integer>$version_min$</integer>
-  <key>LSUIElement</key>
-  <string>1</string>
   <key>LSMultipleInstancesProhibited</key>
   <true />
 </dict>

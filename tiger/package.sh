@@ -73,8 +73,8 @@ Requisiti
 Installazione
 1. Trascinare "UrBackup Client" nella cartella Applicazioni.
 2. Avviarlo da Applicazioni. Il backend parte automaticamente.
-3. L'icona UrBackup compare nella barra dei menu: da li si aprono
-   Impostazioni, Log e stato dei backup.
+3. Nella sessione Tiger di verifica l'icona nel Dock e lo status item non sono
+   stati visibili. Aprire Impostazioni e Percorsi con i comandi indicati sotto.
 
 Dati e configurazione
 Ogni utente ha dati separati in:
@@ -82,8 +82,18 @@ Ogni utente ha dati separati in:
 Il pacchetto non contiene server, credenziali o dati personali. Il server
 UrBackup va configurato nelle Impostazioni del client.
 
+Impostazioni e configurazione delle cartelle
+Aprire Impostazioni con:
+  "/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" settings
+
+La GUI usa l'inserimento del percorso completo (es. /etc), perche' il
+selettore directory nativo di Tiger puo' chiudere inaspettatamente
+l'applicazione. Aprire:
+  "/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" paths
+Selezionare "Aggiungi percorso", digitare il percorso assoluto e premere OK.
+
 Rimozione
-1. Chiudere UrBackup dal menu dell'icona nella barra dei menu.
+1. Chiudere UrBackup e il relativo processo backend.
 2. Eliminare l'applicazione da Applicazioni.
 3. Se si vogliono eliminare anche configurazione e stato locali, eliminare
    ~/Library/Application Support/UrBackupTiger.
