@@ -27,6 +27,12 @@
 #include <memory.h>
 #include <stdlib.h>
 #endif
+#ifdef __APPLE__
+// Darwin <ctype.h> defines isnumber/isletter as macros
+#undef isnumber
+#undef isletter
+#endif
+
 
 
 using namespace std;

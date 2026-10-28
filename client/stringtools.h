@@ -18,6 +18,12 @@
 
 #ifndef STRINGTOOLS_H
 #define STRINGTOOLS_H
+#ifdef __APPLE__
+// Darwin <ctype.h> defines isnumber/isletter as macros
+#undef isnumber
+#undef isletter
+#endif
+
 
 #include <string>
 #include <vector>
