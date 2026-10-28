@@ -111,7 +111,7 @@ Status* Status::instance = NULL;
 Status::Status(wxWindow* parent, wxLongLong_t follow_only_process_id)
 	: GUIStatus(parent, follow_only_process_id)
 {
-	SetIcon(wxIcon(res_path+wxT("backup-ok.")+ico_ext, ico_type));
+	SetIcon(getAppIcon(wxT("backup-ok")));
 
 	if(updateStatus(0))
 	{

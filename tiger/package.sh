@@ -1,35 +1,103 @@
 #!/bin/sh
 set -eu
+
+here=$(CDPATH= cd "$(dirname "$0")" && pwd)
+root=$(dirname "$here")
+cd "$root"
+
+version=2.0.34
 out=package/UrBackupTiger
-mkdir -p "$out/bin" "$out/docs"
+app="$out/UrBackup Client.app"
+resources="$app/Contents/Resources"
+stage=package/dmg
+dmg=UrBackupTiger-${version}-ppc.dmg
+
 test -x urbackupclientgui
-cp urbackupclientbackend urbackupclientctl urbackupclientgui "$out/bin/"
-/usr/bin/strip -S "$out/bin/urbackupclientbackend" "$out/bin/urbackupclientctl" "$out/bin/urbackupclientgui"
+test -x urbackupclientbackend
+test -x urbackupclientctl
 
-mkdir -p "$out/share/urbackup/lang"
-cp client/data/*.ico client/data/logo1.png client/data/urbackup_ecdsa409k1.pub client/data/updates_h.dat client/info.txt client/version.txt "$out/share/urbackup/"
-cp -R client/data/lang/. "$out/share/urbackup/lang/"
+rm -rf package
+mkdir -p "$app/Contents/MacOS" "$resources/bin" "$resources/share/urbackup/lang"
 
-app="$out/Applications/UrBackup Client.app"
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
 cp urbackupclientgui "$app/Contents/MacOS/urbackupclientgui"
-sed \
- -e 's/\$version_num_short\$/2.0.34/g' \
- -e 's/\$version_maj\$/2/g' \
- -e 's/\$version_min\$/0/g' \
- osx_installer/info.plist > "$app/Contents/Info.plist"
-cp osx_installer/urbackup.icns "$app/Contents/Resources/urbackup.icns"
-chmod 700 "$app/Contents/MacOS/urbackupclientgui"
+cp urbackupclientbackend urbackupclientctl "$resources/bin/"
+chmod 755 "$app/Contents/MacOS/urbackupclientgui" "$resources/bin/urbackupclientbackend" "$resources/bin/urbackupclientctl"
+/usr/bin/strip -S "$app/Contents/MacOS/urbackupclientgui" \
+	"$resources/bin/urbackupclientbackend" "$resources/bin/urbackupclientctl"
 
-cp tiger/install.sh "$out/install.sh"
-chmod 700 "$out/install.sh"
-cp tiger/make-launchagent.py "$out/"
-cp COPYING "$out/URBACKUP-COPYING"
-cp cryptoplugin/CRYPTOPP-LICENSE.txt "$out/CRYPTOPP-LICENSE.txt"
-cp README-TIGER.md "$out/README.md"
-cp docs/tiger/*.md "$out/docs/"
-"$out/bin/urbackupclientbackend" --tiger-self-test
-/usr/bin/file "$out/bin/urbackupclientbackend" "$out/bin/urbackupclientctl" "$out/bin/urbackupclientgui"
-/usr/bin/otool -L "$out/bin/urbackupclientbackend"
-/usr/bin/otool -L "$out/bin/urbackupclientgui"
-/usr/bin/tar -czf UrBackupTiger-2.0.34-ppc.tar.gz -C package UrBackupTiger
+cp client/data/*.ico client/data/logo1.png client/data/urbackup_ecdsa409k1.pub \
+	client/data/updates_h.dat client/info.txt client/version.txt \
+	"$resources/share/urbackup/"
+cp client/version.txt "$resources/share/urbackup/curr_version.txt"
+cp -R client/data/lang/. "$resources/share/urbackup/lang/"
+
+sed \
+	-e 's/\$version_num_short\$/'"$version"'/g' \
+	-e 's/\$version_maj\$/2/g' \
+	-e 's/\$version_min\$/0/g' \
+	osx_installer/info.plist > "$app/Contents/Info.plist"
+printf 'APPL????' > "$app/Contents/PkgInfo"
+
+# cp/mkdir do not set the HFS bundle bit. Tiger LaunchServices otherwise
+# refuses to open the application (error -10829).
+if [ -x /Developer/Tools/SetFile ]; then
+	/Developer/Tools/SetFile -a B "$app"
+fi
+
+# The upstream .icns is a placeholder. Derive a real Tiger icon from the
+# original UrBackup status asset already shipped by the frontend.
+if /usr/bin/sips -s format png client/data/backup-ok.ico --out "$out/icon.png" >/dev/null 2>&1 \
+	&& /usr/bin/sips -s format icns "$out/icon.png" --out "$resources/urbackup.icns" >/dev/null 2>&1
+then
+	rm -f "$out/icon.png"
+else
+	cp osx_installer/urbackup.icns "$resources/urbackup.icns"
+fi
+
+mkdir -p "$stage"
+cp -R "$app" "$stage/"
+# Keep the HFS bundle bit on the copy that is written into the DMG as well.
+if [ -x /Developer/Tools/SetFile ]; then
+	/Developer/Tools/SetFile -a B "$stage/UrBackup Client.app"
+fi
+ln -s /Applications "$stage/Applications"
+cp COPYING "$stage/URBACKUP-COPYING.txt"
+cp cryptoplugin/CRYPTOPP-LICENSE.txt "$stage/CRYPTOPP-LICENSE.txt"
+cp README-TIGER.md "$stage/README-TIGER.md"
+cat > "$stage/Leggimi.txt" <<'EOF'
+UrBackup Client Tiger 2.0.34 (PowerPC)
+
+Requisiti
+- Mac OS X 10.4.11 su PowerPC.
+
+Installazione
+1. Trascinare "UrBackup Client" nella cartella Applicazioni.
+2. Avviarlo da Applicazioni. Il backend parte automaticamente.
+3. L'icona UrBackup compare nella barra dei menu: da li si aprono
+   Impostazioni, Log e stato dei backup.
+
+Dati e configurazione
+Ogni utente ha dati separati in:
+  ~/Library/Application Support/UrBackupTiger
+Il pacchetto non contiene server, credenziali o dati personali. Il server
+UrBackup va configurato nelle Impostazioni del client.
+
+Rimozione
+1. Chiudere UrBackup dal menu dell'icona nella barra dei menu.
+2. Eliminare l'applicazione da Applicazioni.
+3. Se si vogliono eliminare anche configurazione e stato locali, eliminare
+   ~/Library/Application Support/UrBackupTiger.
+
+Licenza: GNU AGPL v3 o successiva. Vedere URBACKUP-COPYING.txt.
+EOF
+
+"$resources/bin/urbackupclientbackend" --tiger-self-test
+/usr/bin/file "$resources/bin/urbackupclientbackend" "$resources/bin/urbackupclientctl" "$app/Contents/MacOS/urbackupclientgui"
+/usr/bin/otool -L "$resources/bin/urbackupclientbackend"
+/usr/bin/otool -L "$app/Contents/MacOS/urbackupclientgui"
+
+rm -f "$dmg"
+/usr/bin/hdiutil create -volname "UrBackup Tiger $version" -srcfolder "$stage" \
+	-ov -format UDZO "$dmg"
+/usr/bin/hdiutil verify "$dmg"
+/usr/bin/tar -czf "UrBackupTiger-${version}-ppc.tar.gz" -C package "UrBackupTiger"

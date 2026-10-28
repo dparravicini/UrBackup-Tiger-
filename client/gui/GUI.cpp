@@ -32,13 +32,22 @@ GUISettings::GUISettings( wxWindow* parent, wxWindowID id, const wxString& title
 	m_tab_imagebackups=NULL;
 	m_tab_client=new wxPanel(m_notebook, wxID_ANY);
 	m_tab_internet=new wxPanel(m_notebook, wxID_ANY);;
+	m_checkBox1=NULL;
+	m_textCtrl21=NULL;
+	m_textCtrl22=NULL;
 
 	wxBoxSizer* bSizer_filebackups=new wxBoxSizer( wxVERTICAL );
 	wxBoxSizer* bSizer_imagebackups=NULL;
 	wxBoxSizer* bSizer_client=new wxBoxSizer( wxVERTICAL );
 	wxBoxSizer* bSizer_internet=new wxBoxSizer( wxVERTICAL );
 
+#ifdef _WIN32
 	capa = timer?timer->getCapa():Connector::getCapabilities();
+#else
+	// Settings on Tiger/Unix do not expose image-backup controls. Avoid a
+	// blocking IPC round trip before the dialog can process mouse events.
+	capa = 0;
+#endif
 
 #ifdef _WIN32
 	if( !MyTimer::hasCapability(DONT_DO_IMAGE_BACKUPS, capa) )
@@ -510,7 +519,10 @@ GUISettings::GUISettings( wxWindow* parent, wxWindowID id, const wxString& title
 GUISettings::~GUISettings()
 {
 	// Disconnect Events
-	m_checkBox1->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( GUISettings::OnDisableImageBackups ), NULL, this );
+	if(m_checkBox1!=NULL)
+	{
+		m_checkBox1->Disconnect( wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler( GUISettings::OnDisableImageBackups ), NULL, this );
+	}
 	m_button1->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( GUISettings::OnOkClick ), NULL, this );
 	m_button2->Disconnect( wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler( GUISettings::OnAbortClick ), NULL, this );
 	

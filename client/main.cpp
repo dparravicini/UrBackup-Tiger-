@@ -28,6 +28,7 @@
 #include "CbtStatus.h"
 #include <iostream>
 #include <limits>
+#include <string.h>
 #include <wx/stdpaths.h>
 #include <wx/dir.h>
 #include <wx/filename.h>
@@ -35,10 +36,19 @@
 
 #ifndef _WIN32
 #include "../config.h"
+#include "../tiger/portable_paths.h"
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
 #include <sys/file.h>
+#include <sys/socket.h>
+#include <sys/select.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <errno.h>
 #endif
 
 #include <wx/apptrait.h>
@@ -161,11 +171,24 @@ wxBitmapType ico_type=wxBITMAP_TYPE_XPM;
 
 wxIcon getAppIcon(wxString fn)
 {
+#ifdef __WXOSX_CARBON__
+	// Tiger's IconServices JPEG2000 encoder aborts on the 256px ICO face.
+	// Resize the original asset before creating the native IconRef.
+	wxImage image(res_path + fn + wxT(".") + ico_ext, ico_type);
+	wxIcon icon;
+	if (image.IsOk())
+	{
+		image.Rescale(32, 32, wxIMAGE_QUALITY_HIGH);
+		icon.CopyFromBitmap(wxBitmap(image));
+	}
+	return icon;
+#else
 	int small_sys_x=wxSystemSettings::GetMetric(wxSYS_SMALLICON_X);
 	int small_sys_y=wxSystemSettings::GetMetric(wxSYS_SMALLICON_X);
 	/*wxIconBundle bundle(res_path+fn+wxT(".")+ico_ext);
 	return bundle.GetIcon(wxSize(sys_x, sys_y), wxIconBundle::FALLBACK_NEAREST_LARGER);*/
 	return wxIcon(res_path+fn+wxT(".")+ico_ext, ico_type, small_sys_x, small_sys_y);
+#endif
 }
 
 namespace
@@ -258,9 +281,147 @@ void startOnlyOnce()
 #endif
 }
 
+#ifdef __APPLE__
+static std::string tigerBackendExecutable;
+static std::string tigerClientRoot;
+
+static std::string tigerParentDir(const std::string& path)
+{
+	size_t pos = path.find_last_of('/');
+	if (pos == std::string::npos || pos == 0)
+	{
+		return std::string();
+	}
+	return path.substr(0, pos);
+}
+
+static void tigerMakeDirs(const std::string& path)
+{
+	if (path.empty() || path[0] != '/')
+	{
+		return;
+	}
+	for (size_t pos = 1; pos <= path.size(); ++pos)
+	{
+		if (pos == path.size() || path[pos] == '/')
+		{
+			std::string part = path.substr(0, pos);
+			if (!part.empty() && mkdir(part.c_str(), 0700) != 0 && errno != EEXIST)
+			{
+				return;
+			}
+		}
+	}
+}
+
+static bool tigerBackendReachable()
+{
+	int sock = socket(AF_INET, SOCK_STREAM, 0);
+	if (sock < 0)
+	{
+		return false;
+	}
+
+	int flags = fcntl(sock, F_GETFL, 0);
+	fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+
+	struct sockaddr_in addr;
+	memset(&addr, 0, sizeof(addr));
+	addr.sin_family = AF_INET;
+	addr.sin_port = htons(35623);
+	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+
+	bool reachable = false;
+	int rc = connect(sock, (struct sockaddr*)&addr, sizeof(addr));
+	if (rc == 0)
+	{
+		reachable = true;
+	}
+	else if (errno == EINPROGRESS)
+	{
+		fd_set write_set;
+		FD_ZERO(&write_set);
+		FD_SET(sock, &write_set);
+		struct timeval timeout;
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
+		if (select(sock + 1, NULL, &write_set, NULL, &timeout) > 0)
+		{
+			int so_error = 0;
+			socklen_t len = sizeof(so_error);
+			if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &so_error, &len) == 0 && so_error == 0)
+			{
+				reachable = true;
+			}
+		}
+	}
+	close(sock);
+	return reachable;
+}
+
+static void tigerConfigureBundle()
+{
+	wxString executable = wxStandardPaths::Get().GetExecutablePath();
+	std::string exe = executable.ToUTF8().data();
+	std::string macos_dir = tigerParentDir(exe);
+	std::string contents_dir = tigerParentDir(macos_dir);
+	std::string resources_dir = contents_dir + "/Resources";
+	std::string backend = resources_dir + "/bin/urbackupclientbackend";
+
+	if (!FileExists(backend))
+	{
+		return;
+	}
+
+	const char* home = getenv("HOME");
+	if (home == NULL || home[0] == '\0')
+	{
+		return;
+	}
+
+	tigerBackendExecutable = backend;
+	tigerClientRoot = std::string(home) + "/Library/Application Support/UrBackupTiger";
+	std::string vardir = tigerClientRoot + "/var";
+	std::string logdir = tigerClientRoot + "/log";
+	std::string datadir = resources_dir + "/share";
+	tigerMakeDirs(vardir + "/urbackup/data");
+	tigerMakeDirs(logdir);
+	setenv("URBACKUP_TIGER_VARDIR", vardir.c_str(), 1);
+	setenv("URBACKUP_TIGER_DATADIR", datadir.c_str(), 1);
+}
+
+static void tigerStartBackend()
+{
+	if (tigerBackendExecutable.empty() || tigerClientRoot.empty() || tigerBackendReachable())
+	{
+		return;
+	}
+
+	std::string pidfile = tigerClientRoot + "/client.pid";
+	std::string logfile = tigerClientRoot + "/log/client.log";
+	pid_t pid = fork();
+	if (pid == 0)
+	{
+		setsid();
+		execl(tigerBackendExecutable.c_str(), tigerBackendExecutable.c_str(),
+			"--daemon", "--pidfile", pidfile.c_str(), "--logfile", logfile.c_str(),
+			"--restore", "client-confirms", (char*)NULL);
+		_exit(127);
+	}
+	else if (pid > 0)
+	{
+		int status = 0;
+		waitpid(pid, &status, 0);
+	}
+}
+#endif
+
 bool MyApp::OnInit()
 {
 	wxLog::SetLogLevel(0);
+#ifdef __APPLE__
+	tigerConfigureBundle();
+#endif
 #ifdef _WIN32
 	wchar_t buf[MAX_PATH];
 	GetModuleFileNameW(NULL, buf, MAX_PATH);
@@ -268,8 +429,9 @@ bool MyApp::OnInit()
 	g_res_path=ConvertToUTF8(ExtractFilePath(buf))+"\\";
 	res_path=wxString(g_res_path.c_str(), wxMBConvUTF8());
 #else
-	res_path=wxT(DATADIR "/urbackup/");
-	g_res_path= DATADIR "/urbackup/";
+	std::string data_dir = tigerDataDir(DATADIR);
+	res_path=wxString::FromUTF8(data_dir.c_str())+wxT("/urbackup/");
+	g_res_path=data_dir+"/urbackup/";
 #endif
 	wxLanguage lang=wxLANGUAGE_ENGLISH;
 	wxLanguage sysdef=(wxLanguage)wxLocale::GetSystemLanguage();
@@ -453,6 +615,13 @@ bool MyApp::OnInit()
 		writestring(_("&Access/restore backups").ToUTF8().data(), "access_backups_shell_mui.txt");
 	}
 
+#ifdef __APPLE__
+	if(cmd.empty() || cmd==wxT("settings") || cmd==wxT("paths") || cmd==wxT("logs"))
+	{
+		tigerStartBackend();
+	}
+#endif
+
 	#ifdef __WXMAC__
 	if(!cmd.empty())
 	{
@@ -466,7 +635,7 @@ bool MyApp::OnInit()
 		SetTopWindow(new TheFrame);
 
 		tray=new TrayIcon;
-		bool b=tray->SetIcon(getAppIcon(wxT("backup-ok")), wxT("UrBackup Client"));
+		bool b=tray->SetIconFile(wxT("backup-ok"), wxT("UrBackup Client"));
 		if(!b)
 		{
 			std::cout << "Setting icon failed." << std::endl;
@@ -480,6 +649,8 @@ bool MyApp::OnInit()
 	{
 		Settings *s=new Settings(NULL);
 		SetTopWindow(s);
+		s->Raise();
+		s->SetFocus();
 		s->ShowModal();
 		s->Destroy();
 		wxExit();
@@ -488,6 +659,8 @@ bool MyApp::OnInit()
 	{
 		ConfigPath *cp=new ConfigPath(NULL);
 		SetTopWindow(cp);
+		cp->Raise();
+		cp->SetFocus();
 		cp->ShowModal();
 		cp->Destroy();
 		wxExit();
@@ -496,6 +669,8 @@ bool MyApp::OnInit()
 	{
 		Logs *l=new Logs(NULL);
 		SetTopWindow(l);
+		l->Raise();
+		l->SetFocus();
 		l->ShowModal();
 		l->Destroy();
 		wxExit();
@@ -681,7 +856,7 @@ void MyTimer::Notify()
 			last_status=_("Cannot connect to backup server");
 			icon_type=ETrayIcon_ERROR;
 			if(tray!=NULL)
-				tray->SetIcon(getAppIcon(getIconName(icon_type)), last_status);
+				tray->SetIconFile(getIconName(icon_type), last_status);
 		}
 		status.init = false;
 		return;
@@ -791,7 +966,7 @@ void MyTimer::Notify()
 
 		if(tray!=NULL)
 		{
-			tray->SetIcon(getAppIcon(getIconName(icon_type)), status_text);
+			tray->SetIconFile(getIconName(icon_type), status_text);
 		}
 	}
 

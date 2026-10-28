@@ -31,8 +31,9 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include "../config.h"
-#define PWFILE VARDIR "/urbackup/pw.txt"
-#define PWFILE_CHANGE VARDIR "/urbackup/pw_change.txt"
+#include "../tiger/portable_paths.h"
+#define PWFILE tigerPwFile(false).c_str()
+#define PWFILE_CHANGE tigerPwFile(true).c_str()
 #else
 #include <Windows.h>
 #define PACKAGE_VERSION "$version_full_numeric$"
@@ -40,6 +41,11 @@
 #define PWFILE "pw.txt"
 #define PWFILE_CHANGE "pw_change.txt"
 #endif
+
+std::string tigerPwFile(bool change)
+{
+	return tigerVarDir(VARDIR)+"/urbackup/"+(change?"pw_change.txt":"pw.txt");
+}
 
 void wait(unsigned int ms)
 {

@@ -26,6 +26,7 @@ class TrayIcon : public wxTaskBarIcon
 {
 public:
 	TrayIcon(void);
+	bool SetIconFile(const wxString& fn, const wxString& tooltip);
 #ifdef __WXOSX_CARBON__
 	~TrayIcon(void);
 	bool SetIcon(const wxIcon& icon, const wxString& tooltip);

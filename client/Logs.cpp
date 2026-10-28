@@ -1,3 +1,4 @@
+#include "main.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2015 Martin Raiber
@@ -27,7 +28,7 @@ extern wxBitmapType ico_type;
 
 Logs::Logs(wxWindow* parent) : GUILogfiles(parent)
 {
-	SetIcon(wxIcon(res_path+wxT("backup-ok.")+ico_ext, ico_type));
+	SetIcon(getAppIcon(wxT("backup-ok")));
 	logentries=Connector::getLogEntries();
 
 	if(Connector::hasError())

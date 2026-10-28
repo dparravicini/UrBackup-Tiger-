@@ -40,7 +40,11 @@ size_t CTCPStack::Send(wxSocketBase* p, char* buf, size_t msglen)
 
 	MAX_PACKETSIZE len=(MAX_PACKETSIZE)msglen;
 
-	memcpy(buffer, &len, sizeof(MAX_PACKETSIZE) );
+	// UrBackup IPC lengths are little endian, including on PowerPC.
+	buffer[0] = static_cast<char>(len);
+	buffer[1] = static_cast<char>(len >> 8);
+	buffer[2] = static_cast<char>(len >> 16);
+	buffer[3] = static_cast<char>(len >> 24);
 	memcpy(&buffer[sizeof(MAX_PACKETSIZE)], buf, msglen);
 
 	p->Write(buffer, (wxUint32)(msglen+sizeof(MAX_PACKETSIZE)));
@@ -58,10 +62,14 @@ size_t CTCPStack::Send(wxSocketBase* p, const std::string &msg)
 
 char* CTCPStack::getPacket(size_t* packetsize)
 {
-	if(buffer.size()>1)
+	if(buffer.size()>=sizeof(MAX_PACKETSIZE))
 	{
 		MAX_PACKETSIZE len;
-		memcpy(&len, &buffer[0], sizeof(MAX_PACKETSIZE) );
+		const unsigned char* bytes = reinterpret_cast<const unsigned char*>(&buffer[0]);
+		len = static_cast<unsigned int>(bytes[0])
+		    | (static_cast<unsigned int>(bytes[1]) << 8)
+		    | (static_cast<unsigned int>(bytes[2]) << 16)
+		    | (static_cast<unsigned int>(bytes[3]) << 24);
 
 		if(len==0)
 		{

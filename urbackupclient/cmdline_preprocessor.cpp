@@ -4,6 +4,7 @@
 #include "../tclap/CmdLine.h"
 #include <vector>
 #include "../stringtools.h"
+#include "../tiger/portable_paths.h"
 #include <stdlib.h>
 #ifndef _WIN32
 #include "config.h"
@@ -189,7 +190,7 @@ int main(int argc, char* argv[])
 
 		#ifdef __APPLE__
 		if(arg=="--tiger-self-test") return tiger_selftest();
-		if(arg=="--tiger-vardir") { std::cout << VARDIR << std::endl; return 0; }
+		if(arg=="--tiger-vardir") { std::cout << tigerVarDir(VARDIR) << std::endl; return 0; }
 #endif
 		if(arg=="--version")
 		{
@@ -275,9 +276,9 @@ int main(int argc, char* argv[])
 #endif
 		real_args.push_back("--no-server");
 		real_args.push_back("--workingdir");
-		real_args.push_back(VARDIR);
+		real_args.push_back(tigerVarDir(VARDIR));
 		real_args.push_back("--script_path");
-		real_args.push_back( DATADIR "/urbackup/scripts:" SYSCONFDIR "/urbackup/scripts");
+		real_args.push_back( tigerDataDir(DATADIR) + "/urbackup/scripts:" SYSCONFDIR "/urbackup/scripts");
 		real_args.push_back("--pidfile");
 		real_args.push_back(pidfile_arg.getValue());
 		if(std::find(real_args.begin(), real_args.end(), "--logfile")==real_args.end())

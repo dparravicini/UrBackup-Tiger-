@@ -33,7 +33,9 @@
 #include "../config.h"
 #endif
 #include "FileSettingsReader.h"
+#include "../tiger/portable_paths.h"
 #include <wx/dir.h>
+#include <wx/stdpaths.h>
 
 #undef _
 #define _(s) wxGetTranslation(wxT(s))
@@ -107,6 +109,20 @@ TrayIcon::~TrayIcon(void)
 		tiger_tray_destroy(tiger_tray);
 		tiger_tray=NULL;
 	}
+}
+
+bool TrayIcon::SetIconFile(const wxString& fn, const wxString& tooltip)
+{
+#ifdef __WXOSX_CARBON__
+	if(tiger_tray!=NULL)
+	{
+		wxString path=res_path+fn+wxT(".")+ico_ext;
+		wxCharBuffer utf8=path.utf8_str();
+		tiger_tray_set_icon_file(tiger_tray, utf8.data(), tooltip);
+		return true;
+	}
+#endif
+	return SetIcon(getAppIcon(fn), tooltip);
 }
 
 bool TrayIcon::SetIcon(const wxIcon& icon, const wxString& tooltip)
@@ -196,7 +212,11 @@ void runCommand(std::string cmd, std::string arg1)
 		sudo_prefix = sudo_app + " ";
 	}
 #ifdef __APPLE__
-	std::string clientexecutable = ExtractFilePath(BINDIR)+"/urbackupclientgui";
+	wxString executable = wxStandardPaths::Get().GetExecutablePath();
+	std::string clientexecutable = executable.ToUTF8().data();
+#ifdef __WXOSX_CARBON__
+	sudo_prefix = "";
+#endif
 	wxExecute(sudo_prefix +"\""+ clientexecutable +"\" "+cmd+(arg1.empty()?std::string():(" "+arg1)), wxEXEC_ASYNC, NULL, NULL);
 #else
 	wxExecute(sudo_prefix + BINDIR "/urbackupclientgui "+cmd+(arg1.empty()?std::string():(" "+arg1)), wxEXEC_ASYNC, NULL, NULL);
@@ -227,7 +247,7 @@ void TrayIcon::OnPopupClick(wxCommandEvent &evt)
 			int rc=Connector::startBackup(full);
 			if(rc==1)
 			{
-				SetIcon(getAppIcon(wxT("backup-progress")), _("Waiting for server..."));
+				SetIconFile(wxT("backup-progress"), _("Waiting for server..."));
 			}
 			else if(rc==2)
 				wxMessageBox( _("A backup is already running. Could not start another one."), wxT("UrBackup"), wxOK | wxCENTRE | wxICON_EXCLAMATION);
@@ -252,7 +272,7 @@ void TrayIcon::OnPopupClick(wxCommandEvent &evt)
 			int rc=Connector::startImage(full);
 			if(rc==1)
 			{
-				SetIcon(getAppIcon(wxT("backup-progress")), _("Waiting for server..."));
+				SetIconFile(wxT("backup-progress"), _("Waiting for server..."));
 			}
 			else if(rc==2)
 				wxMessageBox( _("A backup is already running. Could not start another one."), wxT("UrBackup"), wxICON_EXCLAMATION);
@@ -544,7 +564,7 @@ void TrayIcon::accessBackups( wxString path )
 	read_tokens(wx_path, tokens);
 	
 #if !defined(_WIN32)
-	read_tokens(wxT(VARDIR "/urbackup/tokens"), tokens);
+	read_tokens(wxString(tigerVarDir(VARDIR).c_str(), wxConvUTF8)+wxT("/urbackup/tokens"), tokens);
 #endif
 
 	if(tokens.empty())

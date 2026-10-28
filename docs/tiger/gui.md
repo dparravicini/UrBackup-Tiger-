@@ -205,105 +205,93 @@ Rimuovere `LSUIElement` dal bundle: l'icona del tray comparirebbe nel Dock
 con il menu funzionante (implementazione dock di wx Carbon). Non è la menu
 bar e cambia il comportamento originale, quindi non è stata applicata.
 
-## Stato reale al 2026-10-28 17:45 (ultima sessione)
+## Stato finale al 2026-10-28 23:00
 
-### Verificato sul G4
+### Risultato funzionale
 
-- Il G4 è raggiungibile, `daniele` ha una sessione console attiva e
-  `screencapture` funziona.
-- È stato implementato lo status item nativo Tiger in `client/osxtray.h` e
-  nella parte Objective-C++ aggiunta a `client/osxutils.mm`; `TrayIcon` usa
-  `NSStatusItem` solo su `__WXOSX_CARBON__` e conserva il menu wx originale.
-- L'icona originale `backup-ok.ico` è stata vista realmente nella barra dei
-  menu alle coordinate circa `(645,14)` a 1024x768, con il bundle
-  `LSUIElement=1` (quindi niente Dock).
-- Il click manuale dell'utente apre il menu originale. Il processo tray resta
-  vivo finché non viene selezionata la voce `Infos`.
-- Il primo crash `+[NSThread mainThread]: selector not recognized` è stato
-  corretto eliminando quel controllo, non disponibile su Tiger.
-
-### Problema ancora aperto
-
-La voce `Infos` chiude la GUI. Il crash log del PID 14021, ore 17:34:47, è:
+La GUI e il backend sono utilizzabili sul G4 con la build definitiva in
+`/Applications/UrBackup Client.app`. Il backend viene avviato automaticamente
+dal bundle e usa i dati dell'utente in:
 
 ```text
-EXC_BAD_ACCESS at 0x00000065
-CoreText TFont::SetMatrix
-CTFontCreateWithName
-wxFontRefData::MacFindFont (font.cpp)
-wxMacMLTEControl::TXNSetAttribute
-GUIInfo::GUIInfo (GUI.cpp:629)
-Info::Info (Info.cpp:35)
-TrayIcon::OnPopupClick
+~/Library/Application Support/UrBackupTiger
 ```
 
-La causa è compatibilità del font, non il tray e non il backend. Una prima
-correzione limitata al solo nome famiglia vuoto è stata compilata e provata:
-il crash si è ripetuto più avanti, sempre in `CTFontCreateWithName`. Il PID
-14203 ha mostrato lo stesso percorso aprendo `settings`.
+Il problema iniziale delle Impostazioni non era un errore dei widget: con il
+backend attivo il tab `Client` si attiva, i campi sono modificabili e il valore
+viene salvato in `var/urbackup/data/settings.cfg`. La prova di laboratorio ha
+salvato `update_freq_incr=3600`; il profilo di laboratorio e' stato poi
+ripristinato a `-86400`. Il primo click su una finestra non attiva serve solo a
+portarla in primo piano; il click successivo cambia tab.
 
-### Correzione preparata ma non validata
+Sono stati verificati:
 
-In `src/osx/carbon/font.cpp` il ramo Tiger di `wxFontRefData::MacFindFont` è
-stato cambiato per usare direttamente il font UI Carbon:
+- apertura dei tre tab `Backup File`, `Client` e `Internet`;
+- modifica e salvataggio di un valore numerico;
+- apertura di `Logs` e `Infos` senza il crash CoreText delle prime build;
+- avvio del backend da `/Applications`, senza backend di laboratorio gia'
+  attivo;
+- bundle bit HFS presente nell'app installata e nella copia montata dal DMG;
+- self-test del backend PASS e `hdiutil verify` del DMG VALID.
 
-```cpp
-m_ctFont.reset(CTFontCreateUIFontForLanguage(
-    kCTFontSystemFontType, m_info.m_pointSize, NULL));
+### Correzioni Tiger applicate
+
+- framing IPC little endian e percorsi portabili;
+- avvio automatico del backend dal bundle;
+- bundle self-configurante e niente `sudo` su Carbon;
+- gestione sicura delle icone nei dialoghi per evitare il crash CoreText;
+- null dereference in `GUISettings` corretto;
+- `SetFile -a B` sull'app, sia nello stage sia nella copia del DMG: senza
+  bundle bit Tiger rifiuta l'apertura con LaunchServices `-10829`;
+- tray implementato con `NSStatusItem` e caricamento diretto dell'ICO in
+  `NSBitmapImageRep` RGBA, per conservare alpha e trasparenza.
+
+### Limite residuo della menu bar
+
+Nella sessione console attuale del G4 l'icona UrBackup non e' visibile. Non e'
+un errore del codice applicativo: un'app minima che crea soltanto un
+`NSStatusItem` con titolo `TEST4` non compare, pur essendo il processo vivo e
+nonostante il riavvio di `SystemUIServer`. Nelle prove precedenti l'icona
+UrBackup era invece stata vista nella barra dei menu, quindi il comportamento
+e' legato allo stato della sessione grafica Tiger, non alla build.
+
+Sono stati provati senza successo:
+
+- riavvio di `SystemUIServer`;
+- avvio dell'app da SSH, da `open`, e direttamente dal Terminale della sessione
+  grafica;
+- disattivazione temporanea di `MenuCracker` di iStat menus, poi ripristinata;
+- app minima con e senza `LSUIElement`, con titolo e con icona.
+
+Il limite va dichiarato tale finche' non viene verificato dopo un nuovo login
+o reboot del G4. Il menu e' comunque raggiungibile con:
+
+```sh
+"/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" settings
+"/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" logs
 ```
 
-La patch riproducibile è `tiger/deps/wx-3.0.5.1-tiger-uifont.patch` e va
-applicata dopo la patch principale wx. La libreria wx è stata ricompilata e la
-GUI ricollegata nella snapshot di build, ma il binario corretto **non è stato
-ancora installato nel bundle di laboratorio** e `Infos` non è stato ritestato.
-Non dichiarare quindi risolto questo punto.
+### Build e pacchetto definitivi
 
-### Packaging e `/Applications`
-
-L'ultimo package installato è `UrBackupTiger-2.0.34-ppc.tar.gz` delle 17:13,
-che contiene la correzione tray ma non l'ultima correzione font. Non è ancora
-stato prodotto un artefatto pubblicabile definitivo. L'app di laboratorio è in
-`/Volumes/Daniele/Library/UrBackupTigerLab/Applications/UrBackup Client.app`;
-la copia in `/Applications` richiesta dall'utente non è stata eseguita perché
-la verifica funzionale è incompleta.
-
-## Prompt di ripresa per un'altra sessione
+Sorgente di build sul G4:
 
 ```text
-Riprendi il porting GUI di UrBackup Tiger nel repository
-/home/freebox/ports/urbackup-tiger del server 192.168.1.83.
-
-Leggi docs/tiger/gui.md, il commit 136355a6 e i file client/TrayIcon.*,
-client/osxtray.h, client/osxutils.mm. Non rifare l'analisi iniziale.
-
-Stato: icona NSStatusItem verificata sul G4 e menu aperto; il crash di
-+[NSThread mainThread] è corretto. La voce Infos chiude la GUI per un crash
-CoreText in wxFontRefData::MacFindFont. La correzione Tiger usa
-CTFontCreateUIFontForLanguage ed è già applicata al sorgente wx sul G4 e in
-tiger/deps/wx-3.0.5.1-tiger-uifont.patch, ma il bundle installato non la
-contiene ancora.
-
-Accesso: ssh root@192.168.1.83, poi ssh tiger (192.168.1.53, utente daniele).
-Build: /Volumes/Daniele/Projects/.tiger-devkit/builds/
-urbackup-tiger-2.0.34/20261027T223940Z-4fab49b97b/src.
-wx build: /Volumes/Daniele/Projects/.tiger-devkit/deps/wxWidgets-3.0.5.1/
-build-carbon-ppc-nogl, prefisso wx-3.0.5.1-carbon-ppc.
-Laboratorio: /Volumes/Daniele/Library/UrBackupTigerLab.
-
-Procedura esatta:
-1. verificare ssh root@192.168.1.83 e poi ssh tiger uname -a;
-2. verificare che la wx installata contenga la patch uifont e ricompilare solo
-   font.cpp con make -j2 && make install nel build-carbon-ppc-nogl;
-3. ricollegare urbackupclientgui, copiare il binario nel bundle di
-   laboratorio e avviarlo senza toccare il backend;
-4. aprire realmente Infos e verificare che resti aperto, poi Settings, Logs,
-   click tray, stati backup-ok/progress/no-server;
-5. solo dopo il PASS eseguire tiger/package.sh, install.sh e self-test;
-6. creare un pacchetto distribuibile e, se richiesto, copiare il bundle in
-   /Applications senza sovrascrivere installazioni estranee;
-7. aggiornare questo documento con risultati reali, commit e push su Gitea.
-
-Non dichiarare “Infos risolto” senza un click reale sul G4. Non modificare il
-profilo Disabled: le frequenze -86400 sono intenzionali. Non cancellare backup
-o dati personali.
+/Volumes/Daniele/Projects/.tiger-devkit/builds/urbackup-tiger-2.0.34/20261027T223940Z-4fab49b97b/src
 ```
+
+Comandi usati:
+
+```sh
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin   make -j2 urbackupclientbackend urbackupclientctl urbackupclientgui
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin   sh tiger/package.sh
+```
+
+Artefatti:
+
+```text
+UrBackupTiger-2.0.34-ppc.dmg
+UrBackupTiger-2.0.34-ppc.tar.gz
+```
+
+Copie finali: `/Volumes/Daniele/Desktop` sul G4 e `~/Desktop` sull'host.
+Il pacchetto non contiene credenziali, log grezzi o dati personali.

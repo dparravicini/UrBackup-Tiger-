@@ -21,6 +21,7 @@
 #include "main.h"
 #include "capa_bits.h"
 #include "TranslationHelper.h"
+#include "../tiger/portable_paths.h"
 
 #include <wx/valtext.h>
 
@@ -123,13 +124,13 @@ wxTextValidator getDigitSlashValidator(void)
 
 Settings::Settings(wxWindow* parent) : GUISettings(parent)
 {
-	SetIcon(wxIcon(res_path+wxT("backup-ok.")+ico_ext, ico_type));
+	SetIcon(getAppIcon(wxT("backup-ok")));
 #ifdef _DEBUG
 	settings=new CFileSettingsReader("urbackup/data/settings.cfg");
 #elif _WIN32
 	settings=new CFileSettingsReader(g_res_path+"urbackup/data/settings.cfg");
 #else
-	settings = new CFileSettingsReader(VARDIR "/urbackup/data/settings.cfg");
+	settings = new CFileSettingsReader((tigerVarDir(VARDIR)+"/urbackup/data/settings.cfg").c_str());
 #endif
 
 	std::wstring t;
@@ -634,8 +635,8 @@ void Settings::OnOkClick( wxCommandEvent& event )
 	local_speed.ToLong(&l_local_speed);
 	l_local_speed*=(1024*1024)/8;
 
-	l_update_freq_image_full_orig=l_update_freq_image_full;
 #ifdef _WIN32
+	l_update_freq_image_full_orig=l_update_freq_image_full;
 	if(!MyTimer::hasCapability(DONT_DO_IMAGE_BACKUPS, capa))
 	{
 		if(m_checkBox1->GetValue()==false)
@@ -648,12 +649,14 @@ void Settings::OnOkClick( wxCommandEvent& event )
 	std::map<std::string, std::string> n_vals;
 	n_vals["update_freq_incr"]=nconvert(static_cast<float>(l_update_freq_incr*60.f*60.f));
 	n_vals["update_freq_full"]=nconvert(l_update_freq_full*24*60*60);
+#ifdef _WIN32
 	if(!MyTimer::hasCapability(DONT_DO_IMAGE_BACKUPS, capa))
 	{
 		n_vals["update_freq_image_full"]=nconvert(l_update_freq_image_full*24*60*60);
 		n_vals["update_freq_image_full_orig"]=nconvert(l_update_freq_image_full_orig*24*60*60);
 		n_vals["update_freq_image_incr"]=nconvert(l_update_freq_image_incr*24*60*60);
 	}
+#endif
 	n_vals["max_file_incr"]=nconvert(l_max_file_incr);
 	n_vals["min_file_incr"]=nconvert(l_min_file_incr);
 	n_vals["max_file_full"]=nconvert(l_max_file_full);
@@ -742,7 +745,11 @@ void Settings::OnOkClick( wxCommandEvent& event )
 		}
 	}
 
-	Connector::updateSettings(ndata);
+	if(!Connector::updateSettings(ndata))
+	{
+		wxMessageBox(_("Could not update the settings. Check that the UrBackup backend is running."), wxT("UrBackup"), wxOK | wxCENTRE | wxICON_ERROR);
+		return;
+	}
 
 	Close();
 }

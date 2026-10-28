@@ -22,6 +22,7 @@
 #include <iostream>
 #include "json/json.h"
 #include <stdexcept>
+#include "../tiger/portable_paths.h"
 
 #ifndef _WIN32
 #include "../config.h"
@@ -98,7 +99,7 @@ std::string Connector::getPasswordData( bool change_command, bool set_busy)
 #ifdef _WIN32
 			curr_pw = getFile(g_res_path + pw_fn);
 #else
-			curr_pw = getFile(VARDIR "/urbackup/" + pw_fn);
+				curr_pw = getFile(tigerVarDir(VARDIR)+"/urbackup/"+pw_fn);
 #endif
 		}
 

@@ -1,3 +1,4 @@
+#include "main.h"
 /*************************************************************************
 *    UrBackup - Client/Server backup system
 *    Copyright (C) 2011-2015 Martin Raiber
@@ -42,7 +43,7 @@ ConfigPath::ConfigPath(wxWindow* parent)
 
 {
 	mod=false;
-	SetIcon(wxIcon(res_path+wxT("backup-ok.")+ico_ext, ico_type));
+	SetIcon(getAppIcon(wxT("backup-ok")));
 
 	dirs=Connector::getSharedPaths();
 

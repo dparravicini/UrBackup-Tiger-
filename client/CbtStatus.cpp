@@ -1,3 +1,4 @@
+#include "main.h"
 #include "CbtStatus.h"
 #include <wx/process.h>
 
@@ -8,7 +9,7 @@ extern wxBitmapType ico_type;
 CbtStatus::CbtStatus(wxWindow* parent)
 	: GUICbtStatus(parent), wxProcess(wxPROCESS_REDIRECT), first_val(true)
 {
-	SetIcon(wxIcon(res_path + wxT("backup-ok.") + ico_ext, ico_type));
+	SetIcon(getAppIcon(wxT("backup-ok")));
 
 	long pid = wxExecute(wxT("\"") + res_path + wxT("urbctctl.exe\" status all"), wxEXEC_ASYNC, this);
 	if (pid != 0)

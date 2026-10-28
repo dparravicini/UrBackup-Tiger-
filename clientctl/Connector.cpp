@@ -27,6 +27,7 @@
 #include <Windows.h>
 #else
 #include "../config.h"
+#include "../tiger/portable_paths.h"
 #endif
 #include <iostream>
 #include <memory.h>
@@ -505,11 +506,11 @@ bool Connector::readTokens()
 #endif
 
 #ifndef _WIN32
-	std::string vardir = VARDIR;
+	std::string vardir = tigerVarDir(VARDIR);
 	if (vardir != "/var"
 		&& vardir != "/usr/local/var" )
 	{
-		read_tokens(VARDIR "/urbackup/tokens", tokens);
+		read_tokens(tigerVarDir(VARDIR)+"/urbackup/tokens", tokens);
 	}
 #endif
 

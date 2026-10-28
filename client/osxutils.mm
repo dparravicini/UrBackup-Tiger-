@@ -185,11 +185,11 @@ static NSImage* tigerImageFromIcon(const wxIcon& icon)
 	}
 	const int w=img.GetWidth();
 	const int h=img.GetHeight();
-	const bool alpha=img.HasAlpha()!=0;
-	const int spp=alpha?4:3;
+	const bool sourceAlpha=img.HasAlpha()!=0;
+	const int spp=4;
 	NSBitmapImageRep* rep=[[NSBitmapImageRep alloc]
 		initWithBitmapDataPlanes:NULL pixelsWide:w pixelsHigh:h bitsPerSample:8
-		samplesPerPixel:spp hasAlpha:alpha isPlanar:NO
+		samplesPerPixel:spp hasAlpha:YES isPlanar:NO
 		colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
 	if(rep==nil)
 	{
@@ -198,7 +198,7 @@ static NSImage* tigerImageFromIcon(const wxIcon& icon)
 	unsigned char* dst=[rep bitmapData];
 	const int stride=[rep bytesPerRow];
 	const unsigned char* rgb=img.GetData();
-	const unsigned char* alp=alpha?img.GetAlpha():NULL;
+	const unsigned char* alp=sourceAlpha?img.GetAlpha():NULL;
 	for(int y=0;y<h;y++)
 	{
 		unsigned char* row=dst+y*stride;
@@ -209,12 +209,93 @@ static NSImage* tigerImageFromIcon(const wxIcon& icon)
 			row[db+0]=rgb[sb+0];
 			row[db+1]=rgb[sb+1];
 			row[db+2]=rgb[sb+2];
-			if(alpha)
-			{
-				row[db+3]=alp[y*w+x];
-			}
+			row[db+3]=sourceAlpha?alp[y*w+x]:255;
 		}
 	}
+	NSImage* result=[[NSImage alloc] initWithSize:NSMakeSize(w,h)];
+	[result addRepresentation:rep];
+	[rep release];
+	return result;
+}
+
+static NSImage* tigerImageFromFile(const char* path)
+{
+	if(path==NULL)
+	{
+		return nil;
+	}
+
+	wxImage img;
+	if(!img.LoadFile(wxString::FromUTF8(path), wxBITMAP_TYPE_ICO) || !img.IsOk())
+	{
+		return nil;
+	}
+
+	const int sw=img.GetWidth();
+	const int sh=img.GetHeight();
+	const int w=32;
+	const int h=32;
+	const bool sourceAlpha=img.HasAlpha()!=0;
+	const bool sourceMask=img.HasMask()!=0;
+	unsigned char maskRed=0, maskGreen=0, maskBlue=0;
+	if(sourceMask)
+	{
+		maskRed=img.GetMaskRed();
+		maskGreen=img.GetMaskGreen();
+		maskBlue=img.GetMaskBlue();
+	}
+
+	const int spp=4;
+	NSBitmapImageRep* rep=[[NSBitmapImageRep alloc]
+		initWithBitmapDataPlanes:NULL pixelsWide:w pixelsHigh:h bitsPerSample:8
+		samplesPerPixel:spp hasAlpha:YES isPlanar:NO
+		colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+	if(rep==nil)
+	{
+		return nil;
+	}
+
+	unsigned char* dst=[rep bitmapData];
+	const int stride=[rep bytesPerRow];
+	const unsigned char* rgb=img.GetData();
+	const unsigned char* alp=sourceAlpha?img.GetAlpha():NULL;
+	for(int y=0;y<h;y++)
+	{
+		unsigned char* row=dst+y*stride;
+		const int sy=y*sh/h;
+		for(int x=0;x<w;x++)
+		{
+			const int sx=x*sw/w;
+			const int sb=(sy*sw+sx)*3;
+			const int db=x*spp;
+			const unsigned char r=rgb[sb+0];
+			const unsigned char g=rgb[sb+1];
+			const unsigned char b=rgb[sb+2];
+			unsigned char a=255;
+			if(sourceAlpha)
+			{
+				a=alp[sy*sw+sx];
+			}
+			else if(sourceMask)
+			{
+				a=(r==maskRed && g==maskGreen && b==maskBlue)?0:255;
+			}
+			else
+			{
+				a=r>g ? (r>b?r:b) : (g>b?g:b);
+				row[db+0]=0;
+				row[db+1]=0;
+				row[db+2]=0;
+				row[db+3]=a;
+				continue;
+			}
+			row[db+0]=r;
+			row[db+1]=g;
+			row[db+2]=b;
+			row[db+3]=a;
+		}
+	}
+
 	NSImage* result=[[NSImage alloc] initWithSize:NSMakeSize(w,h)];
 	[result addRepresentation:rep];
 	[rep release];
@@ -237,6 +318,7 @@ void* tiger_tray_create(TigerTrayClickFn fn, void* ctx)
 	[item setTarget:target];
 	[item setAction:@selector(clicked:)];
 	[item setHighlightMode:YES];
+	[item setLength:24.0];
 	return target;
 }
 
@@ -248,6 +330,32 @@ void tiger_tray_set_icon(void* handle, const wxIcon& icon, const wxString& toolt
 		return;
 	}
 	NSImage* img=tigerImageFromIcon(icon);
+	if(img!=nil)
+	{
+		[img setScalesWhenResized:YES];
+		[img setSize:NSMakeSize(18,18)];
+		[target->_item setImage:img];
+		[img release];
+	}
+	if(!tooltip.empty())
+	{
+		wxCharBuffer utf8=tooltip.utf8_str();
+		NSString* text=[NSString stringWithUTF8String:utf8.data()];
+		if([target->_item respondsToSelector:@selector(setToolTip:)])
+		{
+			[target->_item performSelector:@selector(setToolTip:) withObject:text];
+		}
+	}
+}
+
+void tiger_tray_set_icon_file(void* handle, const char* path, const wxString& tooltip)
+{
+	TigerTrayTarget* target=(TigerTrayTarget*)handle;
+	if(target==NULL)
+	{
+		return;
+	}
+	NSImage* img=tigerImageFromFile(path);
 	if(img!=nil)
 	{
 		[img setScalesWhenResized:YES];

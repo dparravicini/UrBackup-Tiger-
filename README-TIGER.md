@@ -1,42 +1,64 @@
-# UrBackup Tiger PowerPC — porting in corso
+# UrBackup Tiger PowerPC
 
-Client UrBackup nativo per Mac OS X 10.4.11 PPC, basato su 2.0.34client.
-**Porting in verifica.** Backend e CLI Mach-O PowerPC compilati ed eseguiti sul G4. Backup incrementale e restore incrementale verificati su fixture dedicata, inclusi contenuti, resource fork, FinderInfo, permessi e symlink. La chiusura del restore sul server non lascia più processi fantasma nel caso osservato.
+Client UrBackup nativo per Mac OS X 10.4.11 PowerPC, basato su 2.0.34client.
+Backend, CLI e GUI wx sono Mach-O PowerPC e vengono eseguiti sul G4.
+
+## Stato
+
+- Build e self-test del backend: PASS.
+- GUI wx Carbon: funzionante con backend attivo.
+- Impostazioni: i tre tab `Backup File`, `Client` e `Internet` si attivano e i
+  campi sono modificabili; il salvataggio e' stato verificato sul G4.
+- Log e Infos: aperti senza il crash CoreText osservato nelle prime build.
+- Pacchetto: app in `/Applications`, DMG e TAR redistribuibili generati da
+  `tiger/package.sh`. Il bundle bit HFS e' impostato sia nell'app installata
+  sia nella copia dentro il DMG.
+- Menu bar: implementata con `NSStatusItem` nativa Tiger. L'icona e' stata
+  vista nelle prove precedenti, ma nella sessione console attuale del G4 gli
+  status item di terze parti non vengono mostrati nemmeno da un'app minima di
+  test. Il limite e' quindi dell'ambiente Tiger/SystemUIServer di quella
+  sessione, non della GUI. Dettagli e prove in `docs/tiger/gui.md`.
+
+## Installazione
+
+1. Aprire `UrBackupTiger-2.0.34-ppc.dmg`.
+2. Trascinare `UrBackup Client` in `Applicazioni`.
+3. Avviarlo da `Applicazioni`: il backend parte automaticamente.
+4. Aprire `Impostazioni` dal menu dell'icona o con:
+   `/Applications/UrBackup\ Client.app/Contents/MacOS/urbackupclientgui settings`
+
+I dati utente sono separati per account in:
+
+```text
+~/Library/Application Support/UrBackupTiger
+```
+
+Il pacchetto non contiene server, credenziali o dati personali. Il server
+UrBackup va configurato nelle Impostazioni del client.
+
+## Build e pacchetto
+
+La build Tiger usa GCC 4.0.1, SDK 10.4u e la wx Carbon statica gia' preparata
+nel devkit:
+
+```sh
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+  make -j2 urbackupclientbackend urbackupclientctl urbackupclientgui
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin \
+  sh tiger/package.sh
+```
+
+`tiger/package.sh` esegue il self-test, produce
+`UrBackupTiger-2.0.34-ppc.dmg` e `UrBackupTiger-2.0.34-ppc.tar.gz`, e verifica
+il DMG con `hdiutil verify`.
+
+## Documentazione
 
 - [Analisi, architettura e limiti](docs/tiger/analisi.md)
-- Stato restore e test incrementale: verificati il 2026-10-28; resta il limite HFS+ sui timestamp dei symlink.
+- [Porting GUI wx e verifiche Tiger](docs/tiger/gui.md)
 - [Valutazione macTLS e macsurf](docs/tiger/mactls.md)
-- [Porting GUI wx originale: stato e ripresa](docs/tiger/gui.md)
-- `tiger/probes`: prova reale del profilo macTLS e resource fork.
-- `tiger/build.sh`: build GCC 4.0.1 con SDK 10.4u per backend, CLI e GUI wx.
+- `tiger/probes`: profilo macTLS e resource fork.
+- `tiger/build.sh`: build GCC 4.0.1 con SDK 10.4u.
 
-Il frontend ufficiale `uroni/urbackup_frontend_wx` 2.0.34 è importato in
-`client/`. La GUI wx Carbon è compilata staticamente per PowerPC, impacchettata
-e installata nel prefisso di laboratorio. Sul G4 l'icona originale è stata
-verificata nella barra dei menu e il menu contestuale si apre. La voce `Infos`
-ha però rivelato un crash CoreText nella creazione dei campi di testo; la
-correzione Tiger è compilata ma non ancora installata e ritestata. Non è
-quindi un punto chiuso. Il dettaglio, i crash log e un prompt di ripresa
-pronto per un'altra sessione sono in `docs/tiger/gui.md`.
-
-Usa Vintage-DevKit separato, senza modificarlo. Sulla Freebox:
-```
-cd /home/freebox/ports/urbackup-tiger/tiger/probes
-tiger build && tiger test && tiger deploy && tiger run
-cd ../..
-# configure and Makefile.in are supplied; regenerate on Debian if needed:
-# sh tiger/prepare.sh
-tiger --timeout 3600 build
-```
-
-Non installare ancora il client né configurare avvio automatico. La fase corrente
-compila in directory isolate del DevKit. Le prove usano esclusivamente fixture
-temporanee proprie; non modificano directory personali o configurazioni server.
-I log grezzi e gli artefatti .tiger/build non entrano nel repository.
-
-Il controller locale richiede anch'esso lunghezze pacchetto little endian;
-il port corregge questo framing e la selezione della fixture tramite CLI
-è passata sul target. Il laboratorio usa un'identità distinta, frequenze
-automatiche disabilitate e la sola directory di fixture; nessun altro client
-è stato modificato. `tiger/lab/server_api.py` è un client di test per l'API
-FastCGI già presente sul server: non avvia servizi e non salva sessioni.
+Limite HFS+ noto: Darwin 8 non imposta i timestamp dei symlink; contenuto,
+permessi e destinazione vengono comunque ripristinati.
