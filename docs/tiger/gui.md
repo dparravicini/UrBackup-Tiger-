@@ -48,6 +48,9 @@ Configurazione usata:
   posto di ServiceManagement, assente in Tiger.
 - `client/main.cpp`: lookup delle traduzioni sia in `DATADIR/urbackup` sia in
   `DATADIR/urbackup/lang`.
+- `client/stringtools.cpp`, `client/stringtools.h`: `#undef isnumber` e
+  `#undef isletter` su Darwin, dove `<ctype.h>` le definisce come macro e
+  impedisce la dichiarazione delle funzioni omonime del client.
 - `tiger/build.sh`: richiede `wx-config` e compila backend, CLI e GUI senza
   `--enable-headless`.
 - `tiger/package.sh`: include il binario GUI, le risorse originali e il bundle
@@ -56,36 +59,74 @@ Configurazione usata:
   laboratorio, mantenendo il controllo che vieta l'avvio automatico senza
   directory esplicite.
 
-Patch riproducibile per wxWidgets:
-`tiger/deps/wx-3.0.5.1-tiger-10.4.patch`. Copre:
+## Patch wxWidgets per Tiger
 
-- `AudioServices` e `HIWindowGetAvailablePositioningBounds`, non disponibili
-  nell'SDK 10.4;
+`tiger/deps/wx-3.0.5.1-tiger-10.4.patch` è stato rigenerato per diff diretto
+contro il tarball ufficiale `wxWidgets-3.0.5.1.tar.bz2`: 741 righe, 18 file.
+Copre:
+
+- `AudioServices` e `HIWindowGetAvailablePositioningBounds`, assenti
+  nell'SDK 10.4 (`utils.cpp`, `utils_osx.cpp`, `nonownedwnd.cpp`);
 - limiti dello schermo tramite `GetMainDevice`, con ritorno alle API moderne
   quando disponibili;
 - costanti IconServices per 16/32/48/128/512 px assenti nell'header Tiger,
-  necessarie alle icone originali del tray;
-- fallback `CGColorCreate`/`CGColorCreateGenericRGB` per Quartz su 10.4.
+  necessarie alle icone originali del tray (`core/bitmap.cpp`);
+- fallback `CGColorCreate`/`CGColorCreateGenericRGB` per Quartz su 10.4
+  (`core/colour.cpp`);
+- `typedef SRefCon`/`URefCon` e tabella `kVK_` completa (`app.cpp`);
+- shim CoreText per `CTFontCreateWithName`, `CTFontCreateWithFontDescriptor`,
+  `CTFontCreateCopyWithAttributes`, `CTFontGetSymbolicTraits`,
+  `CTFontGetStringEncoding`, `CTFontUIFontType` e `kCTFontMonoSpaceTrait`
+  (`font.cpp`, `core/fontenum.cpp`);
+- costanti `kCGBlendMode*` assenti in 10.4; `kCGBlendModePlusLighter` vale
+  **27** (il valore 26 è `kCGBlendModePlusDarker`, usato per errore nella
+  prima build del 2026-10-28 e corretto in questa sessione) (`graphics.cpp`);
+- `kHIThemeTextInfoVersionZero` (`listctrl_mac.cpp`);
+- `typedef URefCon` (`menu.cpp`, `nonownedwnd.cpp`, `taskbar.cpp`);
+- `kEventControlFocusPartChanged = 164`, conversione del mouse con
+  `GetGlobalMouse`/`HIPointConvert` e font di controllo con
+  `SetControlFontStyle` (`window.cpp`);
+- ritocchi minori in `dataobj.cpp`, `dcprint.cpp`, `fontdlg.cpp`,
+  `region.cpp`, `core/printmac.cpp`.
 
-## Stato della build al 2026-10-28
+Verifica di riproducibilità: `patch -p1 --dry-run` sull'albero 3.0.5.1
+appena scompattato applica tutti e 18 i file senza reject (2026-10-28).
 
-La build wx ha superato la libreria base e una parte di common/OSX, arrivando a
-252 oggetti compilati. Si è poi fermata sull'API CoreText assente in Tiger:
+## Stato al 2026-10-28 (seconda sessione)
 
-```text
-../src/osx/core/fontenum.cpp:117: error: 'kCTFontMonoSpaceTrait' was not declared in this scope
-make: *** [monolib_core_fontenum.o] Error 1
+Build completata sul G4, con `wx-config --version` = `3.0.5` e libreria
+statica `libwx_osx_carbonu-3.0.a`:
+
+```sh
+PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:$PATH \
+  sh tiger/build.sh
 ```
 
-Il prossimo intervento deve aggiungere in
-`tiger/deps/wx-3.0.5.1-tiger-10.4.patch` il fallback CoreText per Tiger,
-riprendere `make -j2` nella directory build e ripetere il controllo per le
-eventuali ulteriori API 10.5 usate dal port Carbon.
+Risultati verificati:
 
-Non sono ancora stati eseguiti build del frontend UrBackup, installazione del
-bundle, avvio sul G4, verifica dell'icona nella menu bar o test delle finestre.
-Questi punti non vanno considerati riusciti finché non vengono eseguiti sul
-Macintosh reale.
+- `urbackupclientbackend`, `urbackupclientctl` e `urbackupclientgui` sono
+  `Mach-O executable ppc`;
+- `otool -L urbackupclientgui` non elenca alcuna libreria wx dinamica: il
+  frontend è linkato staticamente;
+- pacchetto `UrBackupTiger-2.0.34-ppc.tar.gz` (47.023.663 byte, 2026-10-28
+  15:37) con `install.sh`, bundle, risorse, traduzioni e documentazione;
+- installazione in `/Volumes/Daniele/Library/UrBackupTigerLab` completata;
+- `--tiger-self-test` superato: resource fork, FinderInfo, timestamp regolari,
+  flag dei symlink, xattr NUL-separati, enumerazione account, framing little
+  endian, Crypto++ AES/SHA256, `realpath` con buffer del chiamante;
+- limite noto confermato: Darwin 8 non imposta i timestamp dei symlink su HFS+
+  (`LIMIT verified`);
+- backend di laboratorio riavviato con
+  `--daemon --pidfile ... --logfile ... --restore client-confirms`.
+
+## Verifica visiva: ancora aperta
+
+La verifica dell'icona nella menu bar e delle finestre originali non è stata
+eseguita. Dopo il riavvio del G4 `/dev/console` appartiene a `root`, cioè la
+macchina è ferma al login window: da SSH non esiste alcuna sessione Aqua e
+qualunque processo grafico non può comparire nella barra dei menu. Serve un
+login grafico dell'utente `daniele` sul monitor del G4 prima di poter
+dichiarare riuscito questo punto.
 
 ## Nota sull'icona del bundle
 
@@ -95,26 +136,17 @@ invece gli asset originali `client/data/*.ico`. Il bundle non deve essere
 presentato come dotato di una nuova icona applicativa: l'eventuale icona
 Finder resta un limite da verificare senza modifiche estetiche.
 
-## Ripresa prevista
+## Prossimi passi
 
-1. Completare la patch CoreText/Tiger e verificare `wx-config` con `file` e
-   `otool` (PPC, SDK 10.4).
-2. Trasferire il checkout aggiornato al G4 ed eseguire:
+1. Login grafico di `daniele` sul G4 con il display acceso.
+2. Avviare `/Volumes/Daniele/Library/UrBackupTigerLab/Applications/UrBackup
+   Client.app` nella sessione Aqua e catturare uno screenshot con
+   `screencapture`.
+3. Verificare icona nella menu bar, menu contestuale, Settings, Logs, stati
+   dinamici e collegamento al backend già in esecuzione.
+4. Aggiornare questo documento con l'esito reale, quindi commit e push.
 
-```sh
-PATH=/Volumes/Daniele/Projects/.tiger-devkit/deps/wx-3.0.5.1-carbon-ppc/bin:$PATH \
-  sh tiger/build.sh
-```
-
-3. Correggere gli eventuali errori di compilazione del frontend UrBackup.
-4. Fermare solo il backend di laboratorio, installare il pacchetto e
-   riavviarlo con gli stessi argomenti; non toccare i servizi di produzione.
-5. Verificare con `screencapture` l'icona nella menu bar, l'apertura del menu,
-   le finestre Settings/Logs, gli stati dinamici e il collegamento al backend.
-6. Aggiornare questo documento con i risultati reali, quindi eseguire il
-   commit e il push su Gitea.
-
-## Nota sullo stato “Disabled”
+## Nota sullo stato "Disabled"
 
 La web UI mostra `File backup status: Disabled` perché il profilo di
 laboratorio ha `update_freq_incr`, `update_freq_full`,

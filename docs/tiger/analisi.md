@@ -256,3 +256,18 @@ disponibile nell'SDK 10.4. Non sono ancora stati compilati, installati o
 verificati il frontend UrBackup, il bundle, l'icona nella menu bar e le
 finestre Settings/Logs. Stato e comandi di ripresa sono in
 `docs/tiger/gui.md`; nessun test GUI è dichiarato riuscito.
+
+## Build GUI completata (2026-10-28, seconda sessione)
+
+La nota precedente è superata. wxWidgets 3.0.5.1 Carbon PPC è stato compilato
+per intero e installato; `kCTFontMonoSpaceTrait` e le altre costanti 10.5 sono
+state coperte da fallback nella patch. Anche `kCGBlendModePlusLighter` è stato
+corretto a 27 (il valore 26 è `kCGBlendModePlusDarker`).
+
+Sono stati prodotti `urbackupclientgui` (Mach-O ppc, link statico a wx), il
+pacchetto `UrBackupTiger-2.0.34-ppc.tar.gz` e l'installazione in
+`/Volumes/Daniele/Library/UrBackupTigerLab`, con `--tiger-self-test` superato.
+Resta aperta la sola verifica visiva su sessione Aqua (icona nella menu bar,
+menu, Settings/Logs), che richiede il login grafico dell'utente `daniele`.
+
+Dettaglio completo in `docs/tiger/gui.md`.

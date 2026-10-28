@@ -1,3 +1,511 @@
+--- a/src/osx/carbon/app.cpp
++++ b/src/osx/carbon/app.cpp
+@@ -43,6 +43,107 @@
+ 
+ #include <string.h>
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef long SRefCon;
++typedef unsigned long URefCon;
++
++enum {
++    kVK_ANSI_A = 0x00,
++    kVK_ANSI_S = 0x01,
++    kVK_ANSI_D = 0x02,
++    kVK_ANSI_F = 0x03,
++    kVK_ANSI_H = 0x04,
++    kVK_ANSI_G = 0x05,
++    kVK_ANSI_Z = 0x06,
++    kVK_ANSI_X = 0x07,
++    kVK_ANSI_C = 0x08,
++    kVK_ANSI_V = 0x09,
++    kVK_ANSI_B = 0x0B,
++    kVK_ANSI_Q = 0x0C,
++    kVK_ANSI_W = 0x0D,
++    kVK_ANSI_E = 0x0E,
++    kVK_ANSI_R = 0x0F,
++    kVK_ANSI_Y = 0x10,
++    kVK_ANSI_T = 0x11,
++    kVK_ANSI_1 = 0x12,
++    kVK_ANSI_2 = 0x13,
++    kVK_ANSI_3 = 0x14,
++    kVK_ANSI_4 = 0x15,
++    kVK_ANSI_6 = 0x16,
++    kVK_ANSI_5 = 0x17,
++    kVK_ANSI_9 = 0x19,
++    kVK_ANSI_7 = 0x1A,
++    kVK_ANSI_8 = 0x1C,
++    kVK_ANSI_0 = 0x1D,
++    kVK_ANSI_O = 0x1F,
++    kVK_ANSI_U = 0x20,
++    kVK_ANSI_I = 0x22,
++    kVK_ANSI_P = 0x23,
++    kVK_ANSI_L = 0x25,
++    kVK_ANSI_J = 0x26,
++    kVK_ANSI_K = 0x28,
++    kVK_ANSI_N = 0x2D,
++    kVK_ANSI_M = 0x2E,
++    kVK_ANSI_KeypadDecimal = 0x41,
++    kVK_ANSI_KeypadMultiply = 0x43,
++    kVK_ANSI_KeypadPlus = 0x45,
++    kVK_ANSI_KeypadClear = 0x47,
++    kVK_ANSI_KeypadDivide = 0x4B,
++    kVK_ANSI_KeypadMinus = 0x4E,
++    kVK_ANSI_KeypadEquals = 0x51,
++    kVK_ANSI_Keypad0 = 0x52,
++    kVK_ANSI_Keypad1 = 0x53,
++    kVK_ANSI_Keypad2 = 0x54,
++    kVK_ANSI_Keypad3 = 0x55,
++    kVK_ANSI_Keypad4 = 0x56,
++    kVK_ANSI_Keypad5 = 0x57,
++    kVK_ANSI_Keypad6 = 0x58,
++    kVK_ANSI_Keypad7 = 0x59,
++    kVK_ANSI_Keypad8 = 0x5B,
++    kVK_ANSI_Keypad9 = 0x5C,
++    kVK_Return = 0x24,
++    kVK_Tab = 0x30,
++    kVK_Space = 0x31,
++    kVK_Delete = 0x33,
++    kVK_Escape = 0x35,
++    kVK_Command = 0x37,
++    kVK_Shift = 0x38,
++    kVK_CapsLock = 0x39,
++    kVK_Option = 0x3A,
++    kVK_Control = 0x3B,
++    kVK_F17 = 0x40,
++    kVK_F18 = 0x4F,
++    kVK_F19 = 0x50,
++    kVK_F20 = 0x5A,
++    kVK_F5 = 0x60,
++    kVK_F6 = 0x61,
++    kVK_F7 = 0x62,
++    kVK_F3 = 0x63,
++    kVK_F8 = 0x64,
++    kVK_F9 = 0x65,
++    kVK_F11 = 0x67,
++    kVK_F13 = 0x69,
++    kVK_F16 = 0x6A,
++    kVK_F14 = 0x6B,
++    kVK_F10 = 0x6D,
++    kVK_F12 = 0x6F,
++    kVK_F15 = 0x71,
++    kVK_Help = 0x72,
++    kVK_Home = 0x73,
++    kVK_PageUp = 0x74,
++    kVK_ForwardDelete = 0x75,
++    kVK_F4 = 0x76,
++    kVK_End = 0x77,
++    kVK_F2 = 0x78,
++    kVK_PageDown = 0x79,
++    kVK_F1 = 0x7A,
++    kVK_LeftArrow = 0x7B,
++    kVK_RightArrow = 0x7C,
++    kVK_DownArrow = 0x7D,
++    kVK_UpArrow = 0x7E
++};
++#endif
++
+ // mac
+ #if wxOSX_USE_CARBON
+ #include "wx/osx/uma.h"
+@@ -767,7 +868,15 @@
+             break ;
+ #endif
+         case kEventClassAppleEvent :
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++            {
++                EventRecord eventRecord;
++                ConvertEventRefToEventRecord(event, &eventRecord);
++                result = AEProcessAppleEvent(&eventRecord);
++            }
++#else
+             result = AEProcessEvent(event);
++#endif
+             break ;
+ 
+         default :
+--- a/src/osx/carbon/dataobj.cpp
++++ b/src/osx/carbon/dataobj.cpp
+@@ -29,6 +29,10 @@
+ 
+ #include "wx/osx/private.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++#define kPasteboardTypeFileURLPromise CFSTR("com.apple.pasteboard.promised-file-url")
++#endif
++
+ // ----------------------------------------------------------------------------
+ // wxDataFormat
+ // ----------------------------------------------------------------------------
+--- a/src/osx/carbon/dcprint.cpp
++++ b/src/osx/carbon/dcprint.cpp
+@@ -87,12 +87,16 @@
+     m_err = PMSessionGetCurrentPrinter(native->GetPrintSession(), &printer);
+     if ( m_err == noErr )
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         m_err = PMPrinterGetOutputResolution( printer, native->GetPrintSettings(), &res) ;
+         if ( m_err == -9589 /* kPMKeyNotFound */ )
+         {
+             m_err = noErr ;
+             res.hRes = res.vRes = 300;
+         }
++#else
++        res.hRes = res.vRes = 300;
++#endif
+     }
+     else
+     {
+@@ -144,12 +148,16 @@
+     m_err = PMSessionGetCurrentPrinter(native->GetPrintSession(), &printer);
+     if (m_err == noErr)
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         m_err = PMPrinterGetOutputResolution( printer, native->GetPrintSettings(), &res) ;
+         if ( m_err == -9589 /* kPMKeyNotFound */ )
+         {
+             m_err = noErr ;
+             res.hRes = res.vRes = 300;
+         }
++#else
++        res.hRes = res.vRes = 300;
++#endif
+     }
+     
+     m_maxX = wxCoord((double)m_maxX * res.hRes / 72.0);
+--- a/src/osx/carbon/font.cpp
++++ b/src/osx/carbon/font.cpp
+@@ -27,6 +27,104 @@
+ 
+ #include "wx/osx/private.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef UInt32 CTFontSymbolicTraits;
++extern "C" CTFontRef CTFontCreateWithName(CFStringRef name, CGFloat size,
++                                          const CGAffineTransform *matrix);
++extern "C" CFStringEncoding CTFontGetStringEncoding(CTFontRef font);
++extern "C" CTFontSymbolicTraits CTFontGetSymbolicTraits(CTFontRef font);
++extern "C" const CFStringRef kCTFontFamilyNameAttribute;
++extern "C" const CFStringRef kCTFontNameAttribute;
++extern "C" const CFStringRef kCTFontSymbolicTrait;
++extern "C" const CFStringRef kCTFontSizeAttribute;
++extern "C" const CFStringRef kCTFontTraitsAttribute;
++extern "C" CFTypeRef CTFontDescriptorCopyAttribute(CTFontDescriptorRef descriptor,
++                                                   CFStringRef attribute);
++extern "C" CTFontDescriptorRef CTFontCopyFontDescriptor(CTFontRef font);
++extern "C" CTFontRef CTFontCreateWithFontDescriptor(CTFontDescriptorRef descriptor,
++                                                    CGFloat size,
++                                                    const CGAffineTransform *matrix);
++extern "C" CTFontRef CTFontCreateCopyWithAttributes(CTFontRef font,
++                                                    CGFloat size,
++                                                    const CGAffineTransform *matrix,
++                                                    CTFontDescriptorRef attributes);
++extern "C" CTFontDescriptorRef CTFontDescriptorCreateWithAttributes(CFDictionaryRef attributes);
++#define kCTFontMonoSpaceTrait ((CTFontSymbolicTraits)(1 << 10))
++#define kCTFontItalicTrait ((CTFontSymbolicTraits)(1 << 0))
++#define kCTFontBoldTrait ((CTFontSymbolicTraits)(1 << 1))
++
++typedef UInt32 CTFontUIFontType;
++enum {
++    kCTFontSystemFontType = 2,
++    kCTFontEmphasizedSystemFontType = 3,
++    kCTFontSmallSystemFontType = 4,
++    kCTFontSmallEmphasizedSystemFontType = 5,
++    kCTFontMiniSystemFontType = 6,
++    kCTFontMiniEmphasizedSystemFontType = 7,
++    kCTFontViewsFontType = 8,
++    kCTFontLabelFontType = 10
++};
++
++static CTFontRef wxCTFontCreateUIFontForLanguage(CTFontUIFontType uiType,
++                                                 CGFloat size,
++                                                 CFStringRef WXUNUSED(language))
++{
++    ThemeFontID themeFont = kThemeSystemFont;
++    switch ( uiType )
++    {
++        case kCTFontEmphasizedSystemFontType:
++            themeFont = kThemeEmphasizedSystemFont;
++            break;
++        case kCTFontSmallSystemFontType:
++            themeFont = kThemeSmallSystemFont;
++            break;
++        case kCTFontSmallEmphasizedSystemFontType:
++            themeFont = kThemeSmallEmphasizedSystemFont;
++            break;
++        case kCTFontMiniSystemFontType:
++            themeFont = kThemeMiniSystemFont;
++            break;
++        case kCTFontMiniEmphasizedSystemFontType:
++            themeFont = kThemeMiniSystemFont;
++            break;
++        case kCTFontViewsFontType:
++            themeFont = kThemeViewsFont;
++            break;
++        case kCTFontLabelFontType:
++            themeFont = kThemeLabelFont;
++            break;
++        default:
++            break;
++    }
++
++    Str255 fontName;
++    FMFontSize fontSize = 0;
++    Style fontStyle = 0;
++    GetThemeFont(themeFont, GetApplicationScript(), fontName, &fontSize, &fontStyle);
++
++    CFStringRef cfName = CFStringCreateWithPascalString(kCFAllocatorDefault,
++                                                        fontName,
++                                                        CFStringGetSystemEncoding());
++    CTFontRef font = CTFontCreateWithName(cfName,
++                                          size != 0 ? size : (CGFloat)fontSize,
++                                          NULL);
++    CFRelease(cfName);
++    return font;
++}
++
++static CTFontRef wxCTFontCreateCopyWithSymbolicTraits(CTFontRef,
++                                                      CGFloat,
++                                                      const CGAffineTransform *,
++                                                      CTFontSymbolicTraits,
++                                                      CTFontSymbolicTraits)
++{
++    return NULL;
++}
++
++#define CTFontCreateUIFontForLanguage wxCTFontCreateUIFontForLanguage
++#define CTFontCreateCopyWithSymbolicTraits wxCTFontCreateCopyWithSymbolicTraits
++#endif
++
+ #include <map>
+ #include <string>
+ 
+@@ -527,7 +625,9 @@
+             }
+         }
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         m_cgFont.reset(CTFontCopyGraphicsFont(m_ctFont, NULL));
++#endif
+     }
+ #if wxOSX_USE_ATSU_TEXT
+     CreateATSUFont();
+--- a/src/osx/carbon/fontdlg.cpp
++++ b/src/osx/carbon/fontdlg.cpp
+@@ -76,6 +76,7 @@
+         case kEventFontSelection :
+         {
+             bool setup = false ;
++#if !wxOSX_USE_ATSU_TEXT
+             if ( !setup )
+             {
+                 CTFontDescriptorRef descr;
+@@ -89,6 +90,7 @@
+                     setup = true;
+                 }
+             }
++#endif
+ #if wxOSX_USE_ATSU_TEXT
+             ATSUFontID fontId = 0 ;
+             if ( !setup && (cEvent.GetParameter<ATSUFontID>(kEventParamATSUFontID, &fontId) == noErr) )
+@@ -238,9 +240,14 @@
+         font = m_fontData.m_initialFont ;
+     }
+ 
++#if wxOSX_USE_ATSU_TEXT
++    void *atsuStyle = font.MacGetATSUStyle();
++    err = SetFontInfoForSelection (kFontSelectionATSUIType,1, &atsuStyle , NULL);
++#else
+     CTFontDescriptorRef descr = (CTFontDescriptorRef) CTFontCopyFontDescriptor( (CTFontRef) font.OSXGetCTFont() );
+     err = SetFontInfoForSelection (kFontSelectionCoreTextType,1, &descr , NULL);
+     CFRelease( descr );
++#endif
+ 
+     // just clicking on ENTER will not send us any font setting event, therefore we have to make sure
+     // that field is already correct
+--- a/src/osx/carbon/graphics.cpp
++++ b/src/osx/carbon/graphics.cpp
+@@ -46,6 +46,30 @@
+     #include "wx/cocoa/dcclient.h"
+ #endif
+ 
++#if wxOSX_USE_CARBON && MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef struct __CTLine *CTLineRef;
++extern "C" const CFStringRef kCTFontAttributeName;
++extern "C" const CFStringRef kCTForegroundColorAttributeName;
++extern "C" CGFloat CTFontGetAscent(CTFontRef font);
++extern "C" CTLineRef CTLineCreateWithAttributedString(CFAttributedStringRef string);
++extern "C" void CTLineDraw(CTLineRef line, CGContextRef context);
++extern "C" double CTLineGetTypographicBounds(CTLineRef line,
++                                             CGFloat *ascent,
++                                             CGFloat *descent,
++                                             CGFloat *leading);
++
++#define kCGBlendModeClear ((CGBlendMode)16)
++#define kCGBlendModeCopy ((CGBlendMode)17)
++#define kCGBlendModeSourceIn ((CGBlendMode)18)
++#define kCGBlendModeSourceOut ((CGBlendMode)19)
++#define kCGBlendModeSourceAtop ((CGBlendMode)20)
++#define kCGBlendModeDestinationOver ((CGBlendMode)21)
++#define kCGBlendModeDestinationIn ((CGBlendMode)22)
++#define kCGBlendModeDestinationOut ((CGBlendMode)23)
++#define kCGBlendModeDestinationAtop ((CGBlendMode)24)
++#define kCGBlendModePlusLighter ((CGBlendMode)27)
++#endif
++
+ #ifdef __WXCOCOA__
+ 
+ CGColorSpaceRef wxMacGetGenericRGBColorSpace()
+@@ -2428,7 +2452,15 @@
+     int chars = text.length();
+     for ( int pos = 0; pos < (int)chars; pos ++ )
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         widths[pos] = CTLineGetOffsetForStringIndex( line, pos+1 , NULL );
++#else
++        wxCFStringRef prefix(text.Mid(0, pos+1), wxLocale::GetSystemEncoding());
++        wxCFRef<CFAttributedStringRef> prefixText(
++            CFAttributedStringCreate(kCFAllocatorDefault, prefix, attributes) );
++        wxCFRef<CTLineRef> prefixLine( CTLineCreateWithAttributedString(prefixText) );
++        widths[pos] = CTLineGetTypographicBounds(prefixLine, NULL, NULL, NULL);
++#endif
+     }
+ 
+     CheckInvariants();
+--- a/src/osx/carbon/listctrl_mac.cpp
++++ b/src/osx/carbon/listctrl_mac.cpp
+@@ -2852,6 +2852,7 @@
+     HIThemeTextHorizontalFlush hFlush = kHIThemeTextHorizontalFlushLeft;
+     HIThemeTextInfo info;
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     info.version = kHIThemeTextInfoVersionOne;
+     info.fontID = kThemeViewsFont;
+     if (font.IsOk())
+@@ -2859,6 +2860,11 @@
+         info.fontID = kThemeSpecifiedFont;
+         info.font = (CTFontRef) font.OSXGetCTFont();
+     }
++#else
++    info.version = kHIThemeTextInfoVersionZero;
++    info.fontID = kThemeViewsFont;
++    (void)font;
++#endif
+ 
+     wxListItem item;
+     list->GetColumn(listColumn, item);
+--- a/src/osx/carbon/menu.cpp
++++ b/src/osx/carbon/menu.cpp
+@@ -28,6 +28,10 @@
+ #endif
+ 
+ #include "wx/osx/private.h"
++
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef UInt32 URefCon;
++#endif
+ #include "wx/stockitem.h"
+ 
+ // other standard headers
+--- a/src/osx/carbon/nonownedwnd.cpp
++++ b/src/osx/carbon/nonownedwnd.cpp
+@@ -20,6 +20,10 @@
+ #include "wx/nonownedwnd.h"
+ 
+ #include "wx/osx/private.h"
++
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef UInt32 URefCon;
++#endif
+ #include "wx/settings.h"
+ #include "wx/frame.h"
+ 
+@@ -1522,11 +1526,17 @@
+     Point idealSize = { 0 , 0 } ;
+     if ( maximize )
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         HIRect bounds ;
+         HIWindowGetAvailablePositioningBounds(kCGNullDirectDisplay,kHICoordSpace72DPIGlobal,
+             &bounds);
+         idealSize.h = bounds.size.width;
+         idealSize.v = bounds.size.height;
++#else
++        Rect bounds = (**(GetMainDevice())).gdRect;
++        idealSize.h = bounds.right - bounds.left;
++        idealSize.v = bounds.bottom - bounds.top;
++#endif
+     }
+     ZoomWindowIdeal( (WindowRef)GetWXWindow() , maximize ? inZoomOut : inZoomIn , &idealSize ) ;
+ }
+--- a/src/osx/carbon/region.cpp
++++ b/src/osx/carbon/region.cpp
+@@ -1037,7 +1037,12 @@
+     AllocExclusive();
+     
+     CGRect r = CGRectMake(rect.x , rect.y , rect.width , rect.height);
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     HIShapeUnionWithRect(M_REGION , &r);
++#else
++    wxCFRef<HIShapeRef> rectShape(HIShapeCreateWithRect(&r));
++    verify_noerr( HIShapeUnion(M_REGION, rectShape, M_REGION) );
++#endif
+     
+     return true;
+ }
+@@ -1278,6 +1283,7 @@
+     long m_current ;
+ };
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+ OSStatus wxOSXRegionToRectsCounterCallback(
+     int message, HIShapeRef WXUNUSED(region), const CGRect *WXUNUSED(rect), void *data )
+ {
+@@ -1305,6 +1311,7 @@
+ 
+     return noErr;
+ }
++#endif
+ 
+ void wxRegionIterator::Reset(const wxRegion& region)
+ {
+@@ -1319,13 +1326,13 @@
+     }
+     else
+     {
+-#if 0
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
+         // fallback code in case we ever need it again
+         // copying this to a path and dissecting the path would be an option
+         m_numRects = 1;
+         m_rects = new wxRect[m_numRects];
+         m_rects[0] = m_region.GetBox();
+-#endif
++#else
+         OSStatus err = HIShapeEnumerate (OTHER_M_REGION(region), kHIShapeParseFromTopLeft, wxOSXRegionToRectsCounterCallback,
+             (void*)&m_numRects);
+         if (err == noErr)
+@@ -1341,6 +1348,7 @@
+         {
+             m_numRects = 0;
+         }
++#endif
+     }
+ }
+ 
+--- a/src/osx/carbon/taskbar.cpp
++++ b/src/osx/carbon/taskbar.cpp
+@@ -23,6 +23,10 @@
+ 
+ #include "wx/osx/private.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef UInt32 URefCon;
++#endif
++
+ class wxTaskBarIconImpl
+ {
+ public:
 --- a/src/osx/carbon/utils.cpp
 +++ b/src/osx/carbon/utils.cpp
 @@ -33,7 +33,9 @@
@@ -49,55 +557,78 @@
  }
  
  #endif // wxUSE_GUI
---- a/src/osx/utils_osx.cpp
-+++ b/src/osx/utils_osx.cpp
-@@ -34,7 +34,9 @@
+--- a/src/osx/carbon/window.cpp
++++ b/src/osx/carbon/window.cpp
+@@ -96,6 +96,11 @@
+ // Carbon Events
+ // ---------------------------------------------------------------------------
  
- // #include "MoreFilesX.h"
- 
-+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
- #include <AudioToolbox/AudioServices.h>
-+#endif
- 
- #include "wx/osx/private.h"
- #include "wx/osx/private/timer.h"
---- a/src/osx/carbon/nonownedwnd.cpp
-+++ b/src/osx/carbon/nonownedwnd.cpp
-@@ -1522,11 +1522,17 @@
-     Point idealSize = { 0 , 0 } ;
-     if ( maximize )
-     {
-+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
-         HIRect bounds ;
-         HIWindowGetAvailablePositioningBounds(kCGNullDirectDisplay,kHICoordSpace72DPIGlobal,
-             &bounds);
-         idealSize.h = bounds.size.width;
-         idealSize.v = bounds.size.height;
-+#else
-+        Rect bounds = (**(GetMainDevice())).gdRect;
-+        idealSize.h = bounds.right - bounds.left;
-+        idealSize.v = bounds.bottom - bounds.top;
-+#endif
-     }
-     ZoomWindowIdeal( (WindowRef)GetWXWindow() , maximize ? inZoomOut : inZoomIn , &idealSize ) ;
- }
---- a/src/osx/core/bitmap.cpp
-+++ b/src/osx/core/bitmap.cpp
-@@ -33,6 +33,14 @@
- #include "wx/osx/uma.h"
- #else
- #include "wx/osx/private.h"
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++// Present in 10.5+ headers; Carbon event kind used by wxWidgets' focus path.
++#define kEventControlFocusPartChanged 164
 +#endif
 +
+ static const EventTypeSpec eventList[] =
+ {
+     { kEventClassCommand, kEventProcessCommand } ,
+@@ -1062,7 +1067,16 @@
+         ControlRef control ;
+         Point pt ;
+         HIPoint hiPoint ;
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         HIGetMousePosition(kHICoordSpaceWindow, window, &hiPoint);
++#else
++        Point globalMouse;
++        GetGlobalMouse(&globalMouse);
++        hiPoint.x = globalMouse.h;
++        hiPoint.y = globalMouse.v;
++        HIPointConvert(&hiPoint, kHICoordSpace72DPIGlobal, NULL,
++                       kHICoordSpaceWindow, window);
++#endif
+         pt.h = hiPoint.x;
+         pt.v = hiPoint.y;
+         control = FindControlUnderMouse( pt , window , &part ) ;
+@@ -1179,13 +1193,23 @@
+ {
+     m_font = font;
+     HIViewPartCode part = 0;
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     HIThemeTextHorizontalFlush flush = kHIThemeTextHorizontalFlushDefault;
++#else
++    HIThemeTextHorizontalFlush flush = kHIThemeTextHorizontalFlushLeft;
++#endif
+     if ( ( windowStyle & wxALIGN_MASK ) & wxALIGN_CENTER_HORIZONTAL )
+         flush = kHIThemeTextHorizontalFlushCenter;
+     else if ( ( windowStyle & wxALIGN_MASK ) & wxALIGN_RIGHT )
+         flush = kHIThemeTextHorizontalFlushRight;
++#if !wxOSX_USE_ATSU_TEXT && MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     HIViewSetTextFont( m_controlRef , part , (CTFontRef) font.OSXGetCTFont() );
+     HIViewSetTextHorizontalFlush( m_controlRef, part, flush );
++#else
++    // Tiger applies these through SetControlFontStyle below.
++    (void)part;
++    (void)flush;
++#endif
+ 
+     if ( foreground != *wxBLACK || ignoreBlack == false )
+     {
+--- a/src/osx/core/bitmap.cpp
++++ b/src/osx/core/bitmap.cpp
+@@ -35,6 +35,14 @@
+ #include "wx/osx/private.h"
+ #endif
+ 
 +#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 +#define kIconServices512PixelDataARGB ((OSType)0x69633039)
 +#define kIconServices128PixelDataARGB ((OSType)0x69633037)
 +#define kIconServices48PixelDataARGB ((OSType)0x69633036)
 +#define kIconServices32PixelDataARGB ((OSType)0x69633035)
 +#define kIconServices16PixelDataARGB ((OSType)0x69633034)
- #endif
- 
++#endif
++
  CGColorSpaceRef wxMacGetGenericRGBColorSpace();
+ CGDataProviderRef wxMacCGDataProviderCreateWithMemoryBuffer( const wxMemoryBuffer& buf );
+ 
 --- a/src/osx/core/colour.cpp
 +++ b/src/osx/core/colour.cpp
 @@ -69,7 +69,7 @@
@@ -124,3 +655,87 @@
      wxASSERT_MSG(cfcol != NULL, "Invalid CoreGraphics Color");
      m_cgColour.reset( cfcol );
  }
+--- a/src/osx/core/fontenum.cpp
++++ b/src/osx/core/fontenum.cpp
+@@ -26,6 +26,15 @@
+ 
+ #include "wx/osx/private.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++typedef UInt32 CTFontSymbolicTraits;
++extern "C" CTFontRef CTFontCreateWithName(CFStringRef name, CGFloat size,
++                                          const CGAffineTransform *matrix);
++extern "C" CFStringEncoding CTFontGetStringEncoding(CTFontRef font);
++extern "C" CTFontSymbolicTraits CTFontGetSymbolicTraits(CTFontRef font);
++#define kCTFontMonoSpaceTrait ((CTFontSymbolicTraits)(1 << 10))
++#endif
++
+ // ----------------------------------------------------------------------------
+ // wxFontEnumerator
+ // ----------------------------------------------------------------------------
+--- a/src/osx/core/printmac.cpp
++++ b/src/osx/core/printmac.cpp
+@@ -194,6 +194,7 @@
+                 PMPaper paper = kPMNoData;
+                 if ( bestPaper == kPMNoData )
+                 {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+                     const PMPaperMargins margins = { 0.0, 0.0, 0.0, 0.0 };
+                     wxString id, name(wxT("Custom paper"));
+                     id.Printf(wxT("wxPaperCustom%dx%d"), papersize.x, papersize.y);
+@@ -210,6 +211,7 @@
+                     {
+                         bestPaper = paper;
+                     }
++#endif
+                 }
+                 if ( bestPaper != kPMNoData )
+                 {
+@@ -272,7 +274,9 @@
+             quality = wxPRINT_QUALITY_HIGH;
+ 
+         PMResolution res = resolutions[((quality - wxPRINT_QUALITY_DRAFT) * (resCount - 1)) / 3];
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         PMPrinterSetOutputResolution(printer, m_macPrintSettings, &res);
++#endif
+ 
+         free(resolutions);
+     }
+@@ -392,8 +396,10 @@
+     {
+         bool valid = false;
+         PMResolution res;
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         if ( PMPrinterGetOutputResolution(printer, m_macPrintSettings, &res) == noErr )
+             valid = true;
++#endif
+ 
+         if ( valid )
+         {
+@@ -597,10 +603,14 @@
+ 
+     if (PMSessionGetCurrentPrinter(nativeData->GetPrintSession(), &printer) == noErr)
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         if (PMPrinterGetOutputResolution( printer, nativeData->GetPrintSettings(), &res) == -9589 /* kPMKeyNotFound */ )
+         {
+             res.hRes = res.vRes = 300;
+         }
++#else
++        res.hRes = res.vRes = 300;
++#endif
+     }
+     else
+     {
+--- a/src/osx/utils_osx.cpp
++++ b/src/osx/utils_osx.cpp
+@@ -34,7 +34,9 @@
+ 
+ // #include "MoreFilesX.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+ #include <AudioToolbox/AudioServices.h>
++#endif
+ 
+ #include "wx/osx/private.h"
+ #include "wx/osx/private/timer.h"
