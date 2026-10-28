@@ -235,3 +235,24 @@ upstream conserva il watchdog di cinque minuti e non esiste ancora un ACK
 applicativo bilaterale per `RESTORE DONE`; la correzione elimina la selezione
 del canale obsoleto osservata, ma non trasforma il protocollo in una consegna
 con conferma end-to-end.
+
+## Avvio del porting GUI (2026-10-28)
+
+Il frontend ufficiale `uroni/urbackup_frontend_wx` tag 2.0.34, commit
+`7c76b0e23e5e33ae355bd59bf9b59f2e91e1ab71`, è stato importato in `client/`
+(175 file, circa 5,3 MiB) per riutilizzare il tray wx originale. Il backend
+resta basato su `2.0.34client`, commit
+`8cd27193b8370df739ad08c6f72750ebe3c7fe11`.
+
+Gli adattamenti sono limitati a foreground e login item Tiger, framework
+Carbon/CoreServices/Security, lookup delle traduzioni, packaging del bundle e
+installazione nel prefisso di laboratorio. La build usa wxWidgets 3.0.5.1
+Carbon statico PPC; le incompatibilità SDK 10.4 trovate finora sono raccolte
+nella patch riproducibile `tiger/deps/wx-3.0.5.1-tiger-10.4.patch`.
+
+La build wx ha compilato 252 oggetti e si è fermata su
+`kCTFontMonoSpaceTrait` in `src/osx/core/fontenum.cpp`, costante CoreText non
+disponibile nell'SDK 10.4. Non sono ancora stati compilati, installati o
+verificati il frontend UrBackup, il bundle, l'icona nella menu bar e le
+finestre Settings/Logs. Stato e comandi di ripresa sono in
+`docs/tiger/gui.md`; nessun test GUI è dichiarato riuscito.

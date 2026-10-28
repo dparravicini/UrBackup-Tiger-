@@ -1,0 +1,126 @@
+--- a/src/osx/carbon/utils.cpp
++++ b/src/osx/carbon/utils.cpp
+@@ -33,7 +33,9 @@
+ 
+ // #include "MoreFilesX.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+ #include <AudioToolbox/AudioServices.h>
++#endif
+ 
+ #include "wx/osx/private.h"
+ #if wxUSE_GUI
+@@ -47,8 +49,12 @@
+ // Emit a beeeeeep
+ void wxBell()
+ {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     if ( AudioServicesPlayAlertSound != NULL )
+         AudioServicesPlayAlertSound(kUserPreferredAlert);
++#else
++    SysBeep(1);
++#endif
+ }
+ 
+ wxTimerImpl* wxGUIAppTraits::CreateTimerImpl(wxTimer *timer)
+@@ -145,6 +151,7 @@
+ 
+ void wxClientDisplayRect(int *x, int *y, int *width, int *height)
+ {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     HIRect bounds ;
+     HIWindowGetAvailablePositioningBounds(kCGNullDirectDisplay,kHICoordSpace72DPIGlobal,
+             &bounds);
+@@ -156,6 +163,17 @@
+         *width = bounds.size.width;
+     if ( height )
+         *height = bounds.size.height;
++#else
++    Rect bounds = (**(GetMainDevice())).gdRect;
++    if ( x )
++        *x = bounds.left;
++    if ( y )
++        *y = bounds.top;
++    if ( width )
++        *width = bounds.right - bounds.left;
++    if ( height )
++        *height = bounds.bottom - bounds.top;
++#endif
+ }
+ 
+ #endif // wxUSE_GUI
+--- a/src/osx/utils_osx.cpp
++++ b/src/osx/utils_osx.cpp
+@@ -34,7 +34,9 @@
+ 
+ // #include "MoreFilesX.h"
+ 
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+ #include <AudioToolbox/AudioServices.h>
++#endif
+ 
+ #include "wx/osx/private.h"
+ #include "wx/osx/private/timer.h"
+--- a/src/osx/carbon/nonownedwnd.cpp
++++ b/src/osx/carbon/nonownedwnd.cpp
+@@ -1522,11 +1522,17 @@
+     Point idealSize = { 0 , 0 } ;
+     if ( maximize )
+     {
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+         HIRect bounds ;
+         HIWindowGetAvailablePositioningBounds(kCGNullDirectDisplay,kHICoordSpace72DPIGlobal,
+             &bounds);
+         idealSize.h = bounds.size.width;
+         idealSize.v = bounds.size.height;
++#else
++        Rect bounds = (**(GetMainDevice())).gdRect;
++        idealSize.h = bounds.right - bounds.left;
++        idealSize.v = bounds.bottom - bounds.top;
++#endif
+     }
+     ZoomWindowIdeal( (WindowRef)GetWXWindow() , maximize ? inZoomOut : inZoomIn , &idealSize ) ;
+ }
+--- a/src/osx/core/bitmap.cpp
++++ b/src/osx/core/bitmap.cpp
+@@ -33,6 +33,14 @@
+ #include "wx/osx/uma.h"
+ #else
+ #include "wx/osx/private.h"
++#endif
++
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++#define kIconServices512PixelDataARGB ((OSType)0x69633039)
++#define kIconServices128PixelDataARGB ((OSType)0x69633037)
++#define kIconServices48PixelDataARGB ((OSType)0x69633036)
++#define kIconServices32PixelDataARGB ((OSType)0x69633035)
++#define kIconServices16PixelDataARGB ((OSType)0x69633034)
+ #endif
+ 
+ CGColorSpaceRef wxMacGetGenericRGBColorSpace();
+--- a/src/osx/core/colour.cpp
++++ b/src/osx/core/colour.cpp
+@@ -69,7 +69,7 @@
+     m_alpha = a ;
+ 
+     CGColorRef col = 0 ;
+-#if wxOSX_USE_COCOA_OR_CARBON 
++#if wxOSX_USE_COCOA_OR_CARBON && MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     col = CGColorCreateGenericRGB( (CGFloat)(r / 255.0), (CGFloat) (g / 255.0), (CGFloat) (b / 255.0), (CGFloat) (a / 255.0) );
+ #else
+     CGFloat components[4] = { (CGFloat)(r / 255.0), (CGFloat) (g / 255.0), (CGFloat) (b / 255.0), (CGFloat) (a / 255.0) } ;
+@@ -87,8 +87,14 @@
+     m_green = col.green >> 8;
+     m_alpha = wxALPHA_OPAQUE;
+     CGColorRef cfcol;
++#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1050
+     cfcol = CGColorCreateGenericRGB((CGFloat)(col.red / 65535.0), (CGFloat)(col.green / 65535.0),
+                                         (CGFloat)(col.blue / 65535.0), (CGFloat) 1.0 );
++#else
++    CGFloat components[4] = { (CGFloat)(col.red / 65535.0), (CGFloat)(col.green / 65535.0),
++                              (CGFloat)(col.blue / 65535.0), (CGFloat) 1.0 };
++    cfcol = CGColorCreate( wxMacGetGenericRGBColorSpace(), components );
++#endif
+     wxASSERT_MSG(cfcol != NULL, "Invalid CoreGraphics Color");
+     m_cgColour.reset( cfcol );
+ }

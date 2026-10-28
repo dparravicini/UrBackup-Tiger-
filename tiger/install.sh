@@ -16,10 +16,19 @@ if test -f "$root/client.pid"; then
  case "$pid" in ''|*[!0-9]*) exit 4;; esac
  if kill -0 "$pid" 2>/dev/null; then echo 'Stop the lab client before installation' >&2; exit 5; fi
 fi
-mkdir -p "$root/sbin" "$root/var/urbackup/data" "$root/log"
+mkdir -p "$root/sbin" "$root/bin" "$root/var/urbackup/data" "$root/log" "$root/share/urbackup" "$root/Applications"
 cp "$here/bin/urbackupclientbackend" "$root/sbin/urbackupclientbackend"
 cp "$here/bin/urbackupclientctl" "$root/sbin/urbackupclientctl"
-chmod 700 "$root/sbin/urbackupclientbackend" "$root/sbin/urbackupclientctl"
+cp "$here/bin/urbackupclientgui" "$root/bin/urbackupclientgui"
+chmod 700 "$root/sbin/urbackupclientbackend" "$root/sbin/urbackupclientctl" "$root/bin/urbackupclientgui"
+cp -R "$here/share/urbackup/." "$root/share/urbackup/"
+
+app="$root/Applications/UrBackup Client.app"
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
+cp "$here/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" "$app/Contents/MacOS/urbackupclientgui"
+cp "$here/Applications/UrBackup Client.app/Contents/Info.plist" "$app/Contents/Info.plist"
+cp "$here/Applications/UrBackup Client.app/Contents/Resources/urbackup.icns" "$app/Contents/Resources/urbackup.icns"
+chmod 700 "$app/Contents/MacOS/urbackupclientgui"
 touch "$root/.urbackup-tiger-lab"
 "$root/sbin/urbackupclientbackend" --tiger-self-test
 if test "${1-}" = '--enable-launchd'; then

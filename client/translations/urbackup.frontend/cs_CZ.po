@@ -1,0 +1,559 @@
+# UrBackup English translation
+# Copyright (C) 2011 Martin Raiber
+# This file is distributed under the same license as the UrBackup package.
+# 
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# Ales Hermann, 2014
+msgid ""
+msgstr ""
+"Project-Id-Version: UrBackup\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-05-09 22:28+0200\n"
+"PO-Revision-Date: 2014-10-09 05:56+0000\n"
+"Last-Translator: Ales Hermann\n"
+"Language-Team: Czech (Czech Republic) (http://www.transifex.com/projects/p/urbackup/language/cs_CZ/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: cs_CZ\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: gui\GUI.h:135 TrayIcon.cpp:261
+msgid "Settings"
+msgstr "Nastavení"
+
+#: gui\GUI.h:164 TrayIcon.cpp:271
+msgid "Logs"
+msgstr "Logy"
+
+#: gui\GUI.h:195
+msgid "Informations"
+msgstr "Informace"
+
+#: gui\GUI.h:231 TrayIcon.cpp:266
+msgid "Add/Remove backup paths"
+msgstr "Přidat/odebrat zálohované umístění"
+
+#: gui\GUI.h:257 TrayIcon.cpp:294
+msgid "Status"
+msgstr "Stav"
+
+#: gui\GUI.cpp:52
+msgid "Interval for incremental file backups:"
+msgstr "Interval přírůstkových záloh souborů:"
+
+#: gui\GUI.cpp:59
+msgid "hours"
+msgstr "hodiny"
+
+#: gui\GUI.cpp:68
+msgid "Interval for full file backups:"
+msgstr "Interval plných záloh souborů:"
+
+#: gui\GUI.cpp:75 gui\GUI.cpp:94 gui\GUI.cpp:116
+msgid "days"
+msgstr "dny"
+
+#: gui\GUI.cpp:87
+msgid "Interval for incremental image backups:"
+msgstr "Interval přírůstkového zálohování disků:"
+
+#: gui\GUI.cpp:100
+msgid "Active"
+msgstr "Aktivní"
+
+#: gui\GUI.cpp:109
+msgid "Interval for full image backups:"
+msgstr "Interval plného zálohování disků:"
+
+#: gui\GUI.cpp:136
+msgid "Minimal number of incremental file backups:"
+msgstr "Minimální počet přírůstkových záloh souborů:"
+
+#: gui\GUI.cpp:148
+msgid "Maximal number of incremental file backups:"
+msgstr "Maximální počet rpřírůstkových záloh souborů:"
+
+#: gui\GUI.cpp:160
+msgid "Minimal number of full file backups:"
+msgstr "Minimální počet plných záloh souborů:"
+
+#: gui\GUI.cpp:172
+msgid "Maximal number of full file backups:"
+msgstr "Maximální počet plných záloh souborů:"
+
+#: gui\GUI.cpp:205
+msgid "Minimal number of incremental image backups:"
+msgstr "Minimální počet přírůstkových záloh disků:"
+
+#: gui\GUI.cpp:217
+msgid "Maximal number of incremental image backups:"
+msgstr "Maximální počet přírůstkových záloh disků:"
+
+#: gui\GUI.cpp:229
+msgid "Minimal number of full image backups:"
+msgstr "Minimální počet plných záloh disků:"
+
+#: gui\GUI.cpp:241
+msgid "Maximal number of full image backups:"
+msgstr "Maximální počet plných záloh disků:"
+
+#: gui\GUI.cpp:264
+msgid "Computer name:"
+msgstr "Název počítače:"
+
+#: gui\GUI.cpp:276
+msgid "Exclude from backup (with wildcards):"
+msgstr "Vyloučit ze zálohy (se zástupnými znaky):"
+
+#: gui\GUI.cpp:288
+msgid "Include in backup (with wildcards):"
+msgstr "Zahrnout do zálohy (se zástupnými znaky):"
+
+#: gui\GUI.cpp:300
+msgid "Backup window:"
+msgstr "Časy zálohování:"
+
+#: gui\GUI.cpp:312
+msgid "Backup delay after system start:"
+msgstr "Zpoždění zálohy po startu systému:"
+
+#: gui\GUI.cpp:321
+msgid "min"
+msgstr "min"
+
+#: gui\GUI.cpp:333
+msgid "Volumes to backup:"
+msgstr "Zálohované disky:"
+
+#: gui\GUI.cpp:356
+msgid "Max backup speed for local network:"
+msgstr "Maximální rychlost přenosu záloh pro místní síť:"
+
+#: gui\GUI.cpp:361
+msgid "MBit/s"
+msgstr "MBit/s"
+
+#: gui\GUI.cpp:369
+msgid "Enable backup via internet:"
+msgstr "Povolit zálohy v síti internet:"
+
+#: gui\GUI.cpp:377
+msgid "Internet server name/IP:"
+msgstr "Jméno/IP serveru v síti internet:"
+
+#: gui\GUI.cpp:385
+msgid "Internet server port:"
+msgstr "TCP port serveru v síti internet:"
+
+#: gui\GUI.cpp:393
+msgid "Internet server password:"
+msgstr "Heslo serveru v síti internet:"
+
+#: gui\GUI.cpp:404
+msgid "Do image backups over internet:"
+msgstr "Zálohování disků v síti internet:"
+
+#: gui\GUI.cpp:414
+msgid "Do full file backups over internet:"
+msgstr "Plné zálohy souborů v síti internet:"
+
+#: gui\GUI.cpp:422
+msgid "Max backups speed for internet connection:"
+msgstr "Maximální rychlost přenosu záloh v síťi internet:"
+
+#: gui\GUI.cpp:427
+msgid "KBit/s"
+msgstr "KBit/s"
+
+#: gui\GUI.cpp:433
+msgid "Compressed transfer:"
+msgstr "Komprimovaný přenos:"
+
+#: gui\GUI.cpp:441
+msgid "Encrypted transfer:"
+msgstr "Šifrovaný přenos:"
+
+#: gui\GUI.cpp:460
+msgid "File backups"
+msgstr "Záloha souborů"
+
+#: gui\GUI.cpp:465
+msgid "Image backups"
+msgstr "Záloha disků"
+
+#: gui\GUI.cpp:468
+msgid "Client"
+msgstr "Klient"
+
+#: gui\GUI.cpp:469
+msgid "Internet"
+msgstr "Internet"
+
+#: gui\GUI.cpp:480 gui\GUI.cpp:638 gui\GUI.cpp:698
+msgid "Ok"
+msgstr "Ok"
+
+#: gui\GUI.cpp:485 gui\GUI.cpp:701
+msgid "Abort"
+msgstr "Přerušit"
+
+#: gui\GUI.cpp:535
+msgid "Filter:"
+msgstr "Filtr:"
+
+#: gui\GUI.cpp:539 TrayIcon.cpp:279
+msgid "Infos"
+msgstr "Informace"
+
+#: gui\GUI.cpp:539
+msgid "Warnings"
+msgstr "Varování"
+
+#: gui\GUI.cpp:539
+msgid "Errors"
+msgstr "Chyby"
+
+#: gui\GUI.cpp:556 TrayIcon.cpp:295
+msgid "Exit"
+msgstr "Konec"
+
+#: gui\GUI.cpp:610
+msgid "Version:"
+msgstr "Verze:"
+
+#: gui\GUI.cpp:678
+msgid "Name:"
+msgstr "Název:"
+
+#: gui\GUI.cpp:707
+msgid "Add path"
+msgstr "Přidat cestu"
+
+#: gui\GUI.cpp:710
+msgid "Remove path"
+msgstr "Odebrat cestu"
+
+#: gui\GUI.cpp:808
+msgid "Internet connection status:"
+msgstr "Stav internetového připojení:"
+
+#: ConfigPath.cpp:51 Logs.cpp:35 Status.cpp:120
+msgid "There was an error. Currently nothing can be backed up."
+msgstr "Chyba. Záloha nemůže pokračovat."
+
+#: ConfigPath.cpp:89
+msgid "Please select the directory that will be backed up."
+msgstr "Vyberte prosím složku, která bude zálohována."
+
+#: main.cpp:111
+msgid "_percent_ done."
+msgstr "_percent_ hotovo."
+
+#: main.cpp:333
+msgid "Incremental file backup running."
+msgstr "Probíhá přírůstková záloha souborů."
+
+#: main.cpp:337
+msgid "Full file backup running."
+msgstr "Probíhá plná záloha souborů."
+
+#: main.cpp:341
+msgid "Incremental image backup running."
+msgstr "Probíhá přírůstková záloha disků."
+
+#: main.cpp:345
+msgid "Full image backup running."
+msgstr "Probíhá plná záloha disků."
+
+#: main.cpp:349
+msgid "Resumed incremental file backup running."
+msgstr "Pokračování přírůstkové zálohy souborů."
+
+#: main.cpp:353
+msgid "Resumed full file backup running."
+msgstr "Pokračování plné zálohy souborů."
+
+#: main.cpp:369
+msgid "Indexing."
+msgstr "Indexování."
+
+#: main.cpp:445 main.cpp:449
+msgid "UrBackup: Update available"
+msgstr "UrBackup: Dostupná aktualizace."
+
+#: main.cpp:445 main.cpp:449
+msgid ""
+"A new version of UrBackup is available. Please click here to install it now."
+msgstr "Nová verze UrBackup k dispozici. Instalujte kliknutím zde."
+
+#: main.cpp:468
+msgid "Cannot connect to backup server"
+msgstr "Nelze kontaktovat server záloh."
+
+#: main.cpp:505
+msgid "No current backup."
+msgstr "Žádné aktuální zálohy."
+
+#: main.cpp:516 Status.cpp:174
+msgid "Last backup on _1_"
+msgstr "Poslední záloha v _1_"
+
+#: main.cpp:567 main.cpp:571
+msgid "UrBackup: New server"
+msgstr "UrBackup: Nový server"
+
+#: main.cpp:567 main.cpp:571
+msgid "A new backup server has been found. Click here to use it"
+msgstr "Detekován nový server záloh. Klikněte zde pro jeho použití"
+
+#: Settings.cpp:505
+msgid "The incremental backup interval is not a number"
+msgstr "Interval přírůstkových záloh souborů není číslo"
+
+#: Settings.cpp:511
+msgid "The full backup interval  is not a number"
+msgstr "Interval plného zálohování souborů není číslo"
+
+#: Settings.cpp:520
+msgid "The full image backup interval  is not a number"
+msgstr "Interval plného zálohování disků není číslo"
+
+#: Settings.cpp:526
+msgid "The incremental image backup time is not a number"
+msgstr "Časový interval přírůstkového zálohování disků není číslo"
+
+#: Settings.cpp:534
+msgid "The maximal number of incremental file backups  is not a number"
+msgstr "Maximální počet přírůstkových souborových záloh není číslo"
+
+#: Settings.cpp:540
+msgid "The minimal number of incremental file backups is not a number"
+msgstr "Minimální počet přírůstkových souborových záloh není číslo"
+
+#: Settings.cpp:546
+msgid "The maximal number of full file backups is not a number"
+msgstr "Maximální počet plných souborových záloh není číslo"
+
+#: Settings.cpp:552
+msgid "Minimal number of full file backups is not a number"
+msgstr "Minimální počet plných souborových záloh není číslo"
+
+#: Settings.cpp:561
+msgid "Minimal number of incremental image backups is not a number"
+msgstr "Minimální počet přírůstkových záloh disků není číslo"
+
+#: Settings.cpp:567
+msgid "Maximal number of incremental image backups is not a number"
+msgstr "Maximální počet přírůstkových záloh disků není číslo"
+
+#: Settings.cpp:573
+msgid "Minimal number of full image backups is not a number"
+msgstr "Minimální počet plných záloh disků není číslo"
+
+#: Settings.cpp:579
+msgid "Maximal number of full image backups is not a number"
+msgstr "Maximální počet plných záloh disků není číslo"
+
+#: Settings.cpp:587
+msgid "Backup delay after system start is not a number"
+msgstr "Zpoždění zálohy při startu systému není číslo"
+
+#: Settings.cpp:604
+msgid "_1_ is not a volume"
+msgstr "_1_ není disk"
+
+#: Settings.cpp:613
+msgid "The server port is not valid"
+msgstr "Nesprávný port serveru"
+
+#: Status.cpp:18
+msgid "Initializing."
+msgstr "Inicalizace."
+
+#: Status.cpp:22
+msgid "Waiting for local UrBackup server."
+msgstr "Čekání na místní UrBackup server."
+
+#: Status.cpp:31
+msgid "Connected to local UrBackup server."
+msgstr "Připojen k místnímu UrBackup serveru."
+
+#: Status.cpp:31
+msgid "Not trying to connect to Internet server."
+msgstr "Nepřipojen k internetovému server."
+
+#: Status.cpp:32
+msgid "Local server last seen _1_ minutes ago."
+msgstr "Místní server kontaktován naposledy před _1_ min."
+
+#: Status.cpp:36
+msgid "No Internet server configured."
+msgstr "Internetový server není konfigurován."
+
+#: Status.cpp:40
+msgid "Connected to Internet server"
+msgstr "Připojen k internetovému serveru."
+
+#: Status.cpp:44
+msgid "Could not connect to Internet server. Server unreachable."
+msgstr "Nelze se připojit k internetovému serveru. Server je nedostupný."
+
+#: Status.cpp:48
+msgid "Error: _1_"
+msgstr "Chyba: _1_"
+
+#: Status.cpp:67
+msgid "day"
+msgid_plural "days"
+msgstr[0] "den"
+msgstr[1] "dny"
+msgstr[2] "dny"
+
+#: Status.cpp:75
+msgid "hour"
+msgid_plural "hours"
+msgstr[0] "hodina"
+msgstr[1] "hodiny"
+msgstr[2] "hodiny"
+
+#: Status.cpp:83
+msgid "minute"
+msgid_plural "minutes"
+msgstr[0] "minuta"
+msgstr[1] "minuty"
+msgstr[2] "minuty"
+
+#: Status.cpp:138
+msgid "Idle."
+msgstr "Nečinný."
+
+#: Status.cpp:157
+msgid "ETA: Approx. _1_"
+msgstr "ETA: Přibližně _1_"
+
+#: Status.cpp:192
+msgid "Yes"
+msgstr "Ano"
+
+#: Status.cpp:194
+msgid "No"
+msgstr "Ne"
+
+#: Status.cpp:196
+msgid "Internet: _1_"
+msgstr "Internet: _1_"
+
+#: Status.cpp:205
+msgid "Servers:"
+msgstr "Servery:"
+
+#: TrayIcon.cpp:141 TrayIcon.cpp:164
+msgid "Waiting for server..."
+msgstr "Čekání na server..."
+
+#: TrayIcon.cpp:146 TrayIcon.cpp:169
+msgid "A backup is already running. Could not start another one."
+msgstr "Záloha již probíhá. Nelze spustit další."
+
+#: TrayIcon.cpp:148 TrayIcon.cpp:171
+msgid "Could not start backup, because no backup server was found."
+msgstr "Zálohování nelze spustit, nebyl nalezen žádný server."
+
+#: TrayIcon.cpp:183
+msgid "Pausing failed: No connection to backup server."
+msgstr "Pozastavení neúspěšné: zálohovací server není připojen."
+
+#: TrayIcon.cpp:196
+msgid "Continuing failed: No connection to backup server."
+msgstr "Pokračování neúspěšné: zálohovací server není připojen."
+
+#: TrayIcon.cpp:230
+msgid "Do full file backup"
+msgstr "Spustit plnou souborovou zálohu"
+
+#: TrayIcon.cpp:230
+msgid "Do a full file backup now"
+msgstr "Spustit plnou souborovou zálohu nyní"
+
+#: TrayIcon.cpp:235
+msgid "Do incremental file backup"
+msgstr "Spustit přírůstkovou souborovou zálohu"
+
+#: TrayIcon.cpp:235
+msgid "Do a incremental file backup now"
+msgstr "Spustit přírůstkovou souborovou zálohu nyní"
+
+#: TrayIcon.cpp:244
+msgid "Do full image backup"
+msgstr "Spustit plnou diskovou zálohu"
+
+#: TrayIcon.cpp:244
+msgid "Do a full image backup now"
+msgstr "Spustit plnou diskovou zálohu nyní"
+
+#: TrayIcon.cpp:249
+msgid "Do incremental image backup"
+msgstr "Spustit přírůstkovou diskovou zálohu"
+
+#: TrayIcon.cpp:249
+msgid "Do a incremental image backup now"
+msgstr "Spustit přírůstkovou diskovou zálohu nyní"
+
+#: TrayIcon.cpp:286
+msgid "Pause"
+msgstr "Pozastavení"
+
+#: TrayIcon.cpp:291
+msgid "Continue"
+msgstr "Pokračování"
+
+#~ msgid "_percent_ done. "
+#~ msgstr "_percent_ done. "
+
+#~ msgid "Incremental file backup running. "
+#~ msgstr "Incremental file backup running. "
+
+#~ msgid "Full file backup running. "
+#~ msgstr "Full file backup running. "
+
+#~ msgid "Incremental image backup running. "
+#~ msgstr "Incremental image backup running. "
+
+#~ msgid "Full image backup running. "
+#~ msgstr "Full image backup running. "
+
+#~ msgid "Resumed incremental file backup running. "
+#~ msgstr "Resumed incremental file backup running. "
+
+#~ msgid "Resumed full file backup running. "
+#~ msgstr "Resumed full file backup running. "
+
+#~ msgid "Indexing. "
+#~ msgstr "Indexing. "
+
+#~ msgid "No current backup. "
+#~ msgstr "No current backup. "
+
+#~ msgid "Last backup on "
+#~ msgstr "Last backup on "
+
+#~ msgid "Internet: "
+#~ msgstr "Internet: "
+
+#~ msgid "logo1.png"
+#~ msgstr "logo1.png"
+
+#~ msgid " is not a volume"
+#~ msgstr " is not a volume"
+
+#~ msgid "Remove/Add backup paths"
+#~ msgstr "Remove/Add backup paths"
+
+#~ msgid "Author:"
+#~ msgstr "Author:"

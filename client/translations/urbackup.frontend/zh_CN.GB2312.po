@@ -1,0 +1,554 @@
+# UrBackup English translation
+# Copyright (C) 2011 Martin Raiber
+# This file is distributed under the same license as the UrBackup package.
+# 
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# Translators:
+# uroni <urpc@gmx.de>, 2013
+# renzhengyu <renzhengyu@gmail.com>, 2013
+msgid ""
+msgstr ""
+"Project-Id-Version: UrBackup\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-05-09 22:28+0200\n"
+"PO-Revision-Date: 2014-05-09 20:34+0000\n"
+"Last-Translator: uroni <urpc@gmx.de>\n"
+"Language-Team: Chinese (China) (GB2312) (http://www.transifex.com/projects/p/urbackup/language/zh_CN.GB2312/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_CN.GB2312\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+#: gui\GUI.h:135 TrayIcon.cpp:261
+msgid "Settings"
+msgstr "设置"
+
+#: gui\GUI.h:164 TrayIcon.cpp:271
+msgid "Logs"
+msgstr "日志"
+
+#: gui\GUI.h:195
+msgid "Informations"
+msgstr "信息"
+
+#: gui\GUI.h:231 TrayIcon.cpp:266
+msgid "Add/Remove backup paths"
+msgstr "增加或删除备份路径"
+
+#: gui\GUI.h:257 TrayIcon.cpp:294
+msgid "Status"
+msgstr ""
+
+#: gui\GUI.cpp:52
+msgid "Interval for incremental file backups:"
+msgstr "文件增量备份时间间隔"
+
+#: gui\GUI.cpp:59
+msgid "hours"
+msgstr "小时"
+
+#: gui\GUI.cpp:68
+msgid "Interval for full file backups:"
+msgstr "文件完全备份时间间隔"
+
+#: gui\GUI.cpp:75 gui\GUI.cpp:94 gui\GUI.cpp:116
+msgid "days"
+msgstr "天"
+
+#: gui\GUI.cpp:87
+msgid "Interval for incremental image backups:"
+msgstr "磁盘映像增量备份时间间隔"
+
+#: gui\GUI.cpp:100
+msgid "Active"
+msgstr "活动中"
+
+#: gui\GUI.cpp:109
+msgid "Interval for full image backups:"
+msgstr "磁盘映像完全备份时间间隔"
+
+#: gui\GUI.cpp:136
+msgid "Minimal number of incremental file backups:"
+msgstr "文件增量备份数下限"
+
+#: gui\GUI.cpp:148
+msgid "Maximal number of incremental file backups:"
+msgstr "文件增量备份数上限"
+
+#: gui\GUI.cpp:160
+msgid "Minimal number of full file backups:"
+msgstr "文件完全备份数下限"
+
+#: gui\GUI.cpp:172
+msgid "Maximal number of full file backups:"
+msgstr "文件完全备份数上限"
+
+#: gui\GUI.cpp:205
+msgid "Minimal number of incremental image backups:"
+msgstr "磁盘映像增量备份数下限"
+
+#: gui\GUI.cpp:217
+msgid "Maximal number of incremental image backups:"
+msgstr "磁盘映像增量备份数上限"
+
+#: gui\GUI.cpp:229
+msgid "Minimal number of full image backups:"
+msgstr "磁盘映像完全备份数下限"
+
+#: gui\GUI.cpp:241
+msgid "Maximal number of full image backups:"
+msgstr "磁盘映像完全备份数上限"
+
+#: gui\GUI.cpp:264
+msgid "Computer name:"
+msgstr "计算机名："
+
+#: gui\GUI.cpp:276
+msgid "Exclude from backup (with wildcards):"
+msgstr "从备份中排除（带通配符）："
+
+#: gui\GUI.cpp:288
+msgid "Include in backup (with wildcards):"
+msgstr "包括在备份中（带通配符）："
+
+#: gui\GUI.cpp:300
+msgid "Backup window:"
+msgstr "备份窗口："
+
+#: gui\GUI.cpp:312
+msgid "Backup delay after system start:"
+msgstr "系统启动后延迟："
+
+#: gui\GUI.cpp:321
+msgid "min"
+msgstr "分钟"
+
+#: gui\GUI.cpp:333
+msgid "Volumes to backup:"
+msgstr "待备份的卷："
+
+#: gui\GUI.cpp:356
+msgid "Max backup speed for local network:"
+msgstr "通过局域网备份时的传输速率上限："
+
+#: gui\GUI.cpp:361
+msgid "MBit/s"
+msgstr ""
+
+#: gui\GUI.cpp:369
+msgid "Enable backup via internet:"
+msgstr "启用通过互联网备份："
+
+#: gui\GUI.cpp:377
+msgid "Internet server name/IP:"
+msgstr "互联网服务器主机名或IP地址："
+
+#: gui\GUI.cpp:385
+msgid "Internet server port:"
+msgstr "互联网服务器端口："
+
+#: gui\GUI.cpp:393
+msgid "Internet server password:"
+msgstr "互联网服务器密码："
+
+#: gui\GUI.cpp:404
+msgid "Do image backups over internet:"
+msgstr "通过互联网进行磁盘映像备份："
+
+#: gui\GUI.cpp:414
+msgid "Do full file backups over internet:"
+msgstr "通过互联网进行文件完全备份："
+
+#: gui\GUI.cpp:422
+msgid "Max backups speed for internet connection:"
+msgstr "通过互联网备份时的传输速率上限："
+
+#: gui\GUI.cpp:427
+msgid "KBit/s"
+msgstr ""
+
+#: gui\GUI.cpp:433
+msgid "Compressed transfer:"
+msgstr "压缩传输："
+
+#: gui\GUI.cpp:441
+msgid "Encrypted transfer:"
+msgstr "加密传输："
+
+#: gui\GUI.cpp:460
+msgid "File backups"
+msgstr "文件备份"
+
+#: gui\GUI.cpp:465
+msgid "Image backups"
+msgstr "磁盘映像备份"
+
+#: gui\GUI.cpp:468
+msgid "Client"
+msgstr "客户端"
+
+#: gui\GUI.cpp:469
+msgid "Internet"
+msgstr "互联网"
+
+#: gui\GUI.cpp:480 gui\GUI.cpp:638 gui\GUI.cpp:698
+msgid "Ok"
+msgstr "OK"
+
+#: gui\GUI.cpp:485 gui\GUI.cpp:701
+msgid "Abort"
+msgstr "终止"
+
+#: gui\GUI.cpp:535
+msgid "Filter:"
+msgstr "过滤器："
+
+#: gui\GUI.cpp:539 TrayIcon.cpp:279
+msgid "Infos"
+msgstr "信息"
+
+#: gui\GUI.cpp:539
+msgid "Warnings"
+msgstr "警告"
+
+#: gui\GUI.cpp:539
+msgid "Errors"
+msgstr "错误"
+
+#: gui\GUI.cpp:556 TrayIcon.cpp:295
+msgid "Exit"
+msgstr "退出"
+
+#: gui\GUI.cpp:610
+msgid "Version:"
+msgstr "版本："
+
+#: gui\GUI.cpp:678
+msgid "Name:"
+msgstr "名字："
+
+#: gui\GUI.cpp:707
+msgid "Add path"
+msgstr "添加目录"
+
+#: gui\GUI.cpp:710
+msgid "Remove path"
+msgstr "删除目录"
+
+#: gui\GUI.cpp:808
+msgid "Internet connection status:"
+msgstr ""
+
+#: ConfigPath.cpp:51 Logs.cpp:35 Status.cpp:120
+msgid "There was an error. Currently nothing can be backed up."
+msgstr "发生错误，当前无可备份。"
+
+#: ConfigPath.cpp:89
+msgid "Please select the directory that will be backed up."
+msgstr "请先把需要备份的文件目录。"
+
+#: main.cpp:111
+msgid "_percent_ done."
+msgstr ""
+
+#: main.cpp:333
+msgid "Incremental file backup running."
+msgstr ""
+
+#: main.cpp:337
+msgid "Full file backup running."
+msgstr ""
+
+#: main.cpp:341
+msgid "Incremental image backup running."
+msgstr ""
+
+#: main.cpp:345
+msgid "Full image backup running."
+msgstr ""
+
+#: main.cpp:349
+msgid "Resumed incremental file backup running."
+msgstr ""
+
+#: main.cpp:353
+msgid "Resumed full file backup running."
+msgstr ""
+
+#: main.cpp:369
+msgid "Indexing."
+msgstr ""
+
+#: main.cpp:445 main.cpp:449
+msgid "UrBackup: Update available"
+msgstr "UrBackup：有可用更新"
+
+#: main.cpp:445 main.cpp:449
+msgid ""
+"A new version of UrBackup is available. Please click here to install it now."
+msgstr "UrBackup有新版本，点击此处安装。"
+
+#: main.cpp:468
+msgid "Cannot connect to backup server"
+msgstr "无法连接到备份服务器。"
+
+#: main.cpp:505
+msgid "No current backup."
+msgstr ""
+
+#: main.cpp:516 Status.cpp:174
+msgid "Last backup on _1_"
+msgstr ""
+
+#: main.cpp:567 main.cpp:571
+msgid "UrBackup: New server"
+msgstr "UrBackup: 新服务器"
+
+#: main.cpp:567 main.cpp:571
+msgid "A new backup server has been found. Click here to use it"
+msgstr "发现一个新的备份服务器，点击此处使用。"
+
+#: Settings.cpp:505
+msgid "The incremental backup interval is not a number"
+msgstr "增量备份时间间隔需要一个数字值"
+
+#: Settings.cpp:511
+msgid "The full backup interval  is not a number"
+msgstr "完全备份时间间隔需要一个数字值"
+
+#: Settings.cpp:520
+msgid "The full image backup interval  is not a number"
+msgstr "磁盘映像完全备份时间间隔需要一个数字值"
+
+#: Settings.cpp:526
+msgid "The incremental image backup time is not a number"
+msgstr "磁盘映像增量备份时间需要一个数字值"
+
+#: Settings.cpp:534
+msgid "The maximal number of incremental file backups  is not a number"
+msgstr "文件增量备份数上限需要一个数字值"
+
+#: Settings.cpp:540
+msgid "The minimal number of incremental file backups is not a number"
+msgstr "文件增量备份数下限需要一个数字值"
+
+#: Settings.cpp:546
+msgid "The maximal number of full file backups is not a number"
+msgstr "文件完全备份数上限需要一个数字值"
+
+#: Settings.cpp:552
+msgid "Minimal number of full file backups is not a number"
+msgstr "文件完全备份数下限需要一个数字值"
+
+#: Settings.cpp:561
+msgid "Minimal number of incremental image backups is not a number"
+msgstr "磁盘映像增量备份数下限需要一个数字值"
+
+#: Settings.cpp:567
+msgid "Maximal number of incremental image backups is not a number"
+msgstr "磁盘映像增量备份数上限需要一个数字值"
+
+#: Settings.cpp:573
+msgid "Minimal number of full image backups is not a number"
+msgstr "磁盘映像完全备份数下限需要一个数字值"
+
+#: Settings.cpp:579
+msgid "Maximal number of full image backups is not a number"
+msgstr "磁盘映像完全备份数上限需要一个数字值"
+
+#: Settings.cpp:587
+msgid "Backup delay after system start is not a number"
+msgstr "系统启动后延迟备份设置不是数字"
+
+#: Settings.cpp:604
+msgid "_1_ is not a volume"
+msgstr ""
+
+#: Settings.cpp:613
+msgid "The server port is not valid"
+msgstr ""
+
+#: Status.cpp:18
+msgid "Initializing."
+msgstr ""
+
+#: Status.cpp:22
+msgid "Waiting for local UrBackup server."
+msgstr ""
+
+#: Status.cpp:31
+msgid "Connected to local UrBackup server."
+msgstr ""
+
+#: Status.cpp:31
+msgid "Not trying to connect to Internet server."
+msgstr ""
+
+#: Status.cpp:32
+msgid "Local server last seen _1_ minutes ago."
+msgstr ""
+
+#: Status.cpp:36
+msgid "No Internet server configured."
+msgstr ""
+
+#: Status.cpp:40
+msgid "Connected to Internet server"
+msgstr ""
+
+#: Status.cpp:44
+msgid "Could not connect to Internet server. Server unreachable."
+msgstr ""
+
+#: Status.cpp:48
+msgid "Error: _1_"
+msgstr ""
+
+#: Status.cpp:67
+msgid "day"
+msgid_plural "days"
+msgstr[0] ""
+
+#: Status.cpp:75
+msgid "hour"
+msgid_plural "hours"
+msgstr[0] ""
+
+#: Status.cpp:83
+msgid "minute"
+msgid_plural "minutes"
+msgstr[0] ""
+
+#: Status.cpp:138
+msgid "Idle."
+msgstr ""
+
+#: Status.cpp:157
+msgid "ETA: Approx. _1_"
+msgstr ""
+
+#: Status.cpp:192
+msgid "Yes"
+msgstr ""
+
+#: Status.cpp:194
+msgid "No"
+msgstr ""
+
+#: Status.cpp:196
+msgid "Internet: _1_"
+msgstr ""
+
+#: Status.cpp:205
+msgid "Servers:"
+msgstr ""
+
+#: TrayIcon.cpp:141 TrayIcon.cpp:164
+msgid "Waiting for server..."
+msgstr "等待服务器中……"
+
+#: TrayIcon.cpp:146 TrayIcon.cpp:169
+msgid "A backup is already running. Could not start another one."
+msgstr "备份任务正在执行，无法开始执行更一任务。"
+
+#: TrayIcon.cpp:148 TrayIcon.cpp:171
+msgid "Could not start backup, because no backup server was found."
+msgstr "无法开始备份：非发现备份服务器。"
+
+#: TrayIcon.cpp:183
+msgid "Pausing failed: No connection to backup server."
+msgstr "无法暂停：与备份服务器失去连接。"
+
+#: TrayIcon.cpp:196
+msgid "Continuing failed: No connection to backup server."
+msgstr "无法继续：与备份服务器失去连接。"
+
+#: TrayIcon.cpp:230
+msgid "Do full file backup"
+msgstr "执行文件完全备份"
+
+#: TrayIcon.cpp:230
+msgid "Do a full file backup now"
+msgstr ""
+
+#: TrayIcon.cpp:235
+msgid "Do incremental file backup"
+msgstr "执行文件增量备份"
+
+#: TrayIcon.cpp:235
+msgid "Do a incremental file backup now"
+msgstr ""
+
+#: TrayIcon.cpp:244
+msgid "Do full image backup"
+msgstr "执行磁盘映像完全备份"
+
+#: TrayIcon.cpp:244
+msgid "Do a full image backup now"
+msgstr ""
+
+#: TrayIcon.cpp:249
+msgid "Do incremental image backup"
+msgstr "执行磁盘映像增量备份"
+
+#: TrayIcon.cpp:249
+msgid "Do a incremental image backup now"
+msgstr ""
+
+#: TrayIcon.cpp:286
+msgid "Pause"
+msgstr "暂停"
+
+#: TrayIcon.cpp:291
+msgid "Continue"
+msgstr "继续"
+
+#~ msgid "_percent_ done. "
+#~ msgstr "_percent_ done. "
+
+#~ msgid "Incremental file backup running. "
+#~ msgstr "Incremental file backup running. "
+
+#~ msgid "Full file backup running. "
+#~ msgstr "Full file backup running. "
+
+#~ msgid "Incremental image backup running. "
+#~ msgstr "Incremental image backup running. "
+
+#~ msgid "Full image backup running. "
+#~ msgstr "Full image backup running. "
+
+#~ msgid "Resumed incremental file backup running. "
+#~ msgstr "Resumed incremental file backup running. "
+
+#~ msgid "Resumed full file backup running. "
+#~ msgstr "Resumed full file backup running. "
+
+#~ msgid "Indexing. "
+#~ msgstr "Indexing. "
+
+#~ msgid "No current backup. "
+#~ msgstr "No current backup. "
+
+#~ msgid "Last backup on "
+#~ msgstr "Last backup on "
+
+#~ msgid "Internet: "
+#~ msgstr "Internet: "
+
+#~ msgid "logo1.png"
+#~ msgstr "logo1.png"
+
+#~ msgid " is not a volume"
+#~ msgstr " is not a volume"
+
+#~ msgid "Remove/Add backup paths"
+#~ msgstr "Remove/Add backup paths"
+
+#~ msgid "Author:"
+#~ msgstr "Author:"

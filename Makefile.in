@@ -1166,7 +1166,7 @@ urbackupclientgui_CXXFLAGS = -DLINUX $(WX_CXXFLAGS_ONLY) -DDATADIR='"$(datadir)"
 urbackupclientgui_CFLAGS = $(WX_CFLAGS_ONLY)
 urbackupclientgui_CPPFLAGS = $(WX_CPPFLAGS) -DNDEBUG
 urbackupclientgui_LDADD = $(WX_LIBS)
-@MACOSX_TRUE@urbackupclientgui_LDFLAGS = -framework ServiceManagement -framework CoreServices -framework Security
+@MACOSX_TRUE@urbackupclientgui_LDFLAGS = -framework Carbon -framework CoreServices -framework Security
 INSTALL_OPTS = 
 cryptoplugin_headers = cryptoplugin/AESEncryption.h cryptoplugin/AESDecryption.h cryptoplugin/IAESDecryption.h cryptoplugin/ICryptoFactory.h cryptoplugin/pluginmgr.h cryptoplugin/IAESEncryption.h cryptoplugin/CryptoFactory.h cryptoplugin/IZlibCompression.h cryptoplugin/IZlibDecompression.h cryptoplugin/ZlibCompression.h cryptoplugin/ZlibDecompression.h cryptoplugin/cryptopp_inc.h cryptoplugin/AESGCMDecryption.h cryptoplugin/AESGCMEncryption.h cryptoplugin/ECDHKeyExchange.h cryptoplugin/IAESGCMDecryption.h cryptoplugin/IAESGCMEncryption.h cryptoplugin/IECDHKeyExchange.h
 fileservplugin_headers = fileservplugin/bufmgr.h fileservplugin/CUDPThread.h fileservplugin/FileServFactory.h fileservplugin/IFileServ.h fileservplugin/packet_ids.h fileservplugin/socket_header.h fileservplugin/CriticalSection.h fileservplugin/FileServ.h fileservplugin/log.h fileservplugin/pluginmgr.h   fileservplugin/CClientThread.h fileservplugin/CTCPFileServ.h fileservplugin/IFileServFactory.h fileservplugin/map_buffer.h fileservplugin/settings.h fileservplugin/types.h fileservplugin/chunk_settings.h fileservplugin/ChunkSendThread.h fileservplugin/PipeFile.h fileservplugin/PipeSessions.h  fileservplugin/PipeFileBase.h fileservplugin/IPermissionCallback.h fileservplugin/FileMetadataPipe.h fileservplugin/PipeFileTar.h

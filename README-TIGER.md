@@ -6,8 +6,15 @@ Client UrBackup nativo per Mac OS X 10.4.11 PPC, basato su 2.0.34client.
 - [Analisi, architettura e limiti](docs/tiger/analisi.md)
 - Stato restore e test incrementale: verificati il 2026-10-28; resta il limite HFS+ sui timestamp dei symlink.
 - [Valutazione macTLS e macsurf](docs/tiger/mactls.md)
+- [Porting GUI wx originale: stato e ripresa](docs/tiger/gui.md)
 - `tiger/probes`: prova reale del profilo macTLS e resource fork.
-- `tiger/build.sh`: build headless GCC 4.0.1 con SDK 10.4u.
+- `tiger/build.sh`: build GCC 4.0.1 con SDK 10.4u per backend, CLI e GUI wx.
+
+Il frontend ufficiale `uroni/urbackup_frontend_wx` 2.0.34 è importato in
+`client/`. La build wxWidgets Carbon per Tiger è ferma temporaneamente su una
+costante CoreText assente in SDK 10.4: non esiste ancora un bundle GUI
+compilato o verificato sul G4. Il dettaglio aggiornato e il punto di ripresa
+sono in `docs/tiger/gui.md`.
 
 Usa Vintage-DevKit separato, senza modificarlo. Sulla Freebox:
 ```

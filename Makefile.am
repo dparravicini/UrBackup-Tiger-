@@ -58,7 +58,7 @@ urbackupclientgui_CPPFLAGS = $(WX_CPPFLAGS) -DNDEBUG
 urbackupclientgui_LDADD = $(WX_LIBS)
 
 if MACOSX
-urbackupclientgui_LDFLAGS = -framework ServiceManagement -framework CoreServices -framework Security
+urbackupclientgui_LDFLAGS = -framework Carbon -framework CoreServices -framework Security
 endif
 
 install-exec-local: defaults_client init.d_client init.d_client_rh
