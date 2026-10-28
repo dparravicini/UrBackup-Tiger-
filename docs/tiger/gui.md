@@ -154,3 +154,50 @@ laboratorio ha `update_freq_incr`, `update_freq_full`,
 UrBackup interpreta i valori negativi come pianificazione disabilitata; non è
 un errore del server né del porting. Non è stato cambiato per non introdurre
 backup automatici indesiderati nel laboratorio.
+
+## Esito della verifica visiva (2026-10-28 16:52)
+
+Con l'utente `daniele` regolarmente loggato in console (`who` mostra
+`daniele console`, `/dev/console` di `daniele`) il bundle è stato avviato con
+`open` e il processo resta attivo (PID 5834, poi 5935); screencapture su
+`:0` funziona.
+
+Risultato reale: **nessuna icona nella menu bar e nessuna icona nel Dock.**
+
+Causa individuata nel codice, non presunta:
+
+- `client/TrayIcon.cpp:65` deriva da `wxTaskBarIcon()` senza tipo esplicito.
+- In wxWidgets 3.0.5.1 il port **Carbon non implementa gli status item**:
+  `src/osx/carbon/taskbar.cpp` crea `wxDockTaskBarIcon` e asserisce
+  `Only the wxTBI_DOCK implementation of wxTaskBarIcon on Mac-Carbon is
+  currently supported!`. Su Carbon quindi `wxTaskBarIcon` coincide con
+  l'icona del Dock dell'applicazione (`SetApplicationDockTileImage`).
+- Il bundle dichiara `LSUIElement=1` in `osx_installer/info.plist`, quindi
+  l'applicazione è invisibile nel Dock: l'icona viene impostata su una tile
+  che non esiste e non è visibile da nessuna parte.
+
+Non è un errore di build né di linkaggio: `SetIcon` restituisce successo
+(nessun `Setting icon failed.` nei log) e il backend IPC funziona. È una
+lacuna del port Carbon di wx 3.0.5.1 rispetto al port Cocoa, dove esiste
+`wxTBI_CUSTOM_STATUSITEM` (NSStatusItem).
+
+### Lavoro residuo necessario
+
+Per ottenere la vera icona nella barra dei menu su Tiger serve uno status item
+nativo: `NSStatusItem` esiste in 10.4 e l'applicazione linka già
+`Cocoa.framework`, quindi l'intervento minimo è un piccolo file
+Objective-C++ (sul modello di `client/osxutils.mm`) che:
+
+1. crea `[[NSStatusBar systemStatusBar] statusItemWithLength:...]`;
+2. converte il `wxIcon`/`wxBitmap` già usato dal tray in `NSImage`;
+3. inoltra il click al menu wx esistente (`TrayIcon::CreatePopupMenu`).
+
+Va mantenuto lo stesso set di icone originali e lo stesso menu; non è una
+nuova GUI, è l'implementazione mancante dell'host toolkit. Fino a quel
+momento il requisito "icona nella menu bar" resta **non soddisfatto**.
+
+### Alternativa immediata, senza nuovo codice
+
+Rimuovere `LSUIElement` dal bundle: l'icona del tray comparirebbe nel Dock
+con il menu funzionante (implementazione dock di wx Carbon). Non è la menu
+bar e cambia il comportamento originale, quindi non è stata applicata.
