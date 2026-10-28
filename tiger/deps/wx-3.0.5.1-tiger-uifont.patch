@@ -1,0 +1,22 @@
+--- a/src/osx/carbon/font.cpp
++++ b/src/osx/carbon/font.cpp
+@@ -568,6 +568,11 @@
+         if ( !m_ctFont )
+         {
+             
++#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
++            // CoreText 1.0.4 is not reliable with arbitrary family names on
++            // Tiger. Carbon already supplies the native UI face through ATSU.
++            m_ctFont.reset(CTFontCreateUIFontForLanguage( kCTFontSystemFontType, m_info.m_pointSize , NULL ));
++#else
+             wxStringToStringHashMap::const_iterator it = gs_FontFamilyToPSName.find(m_info.m_faceName);
+             
+             if ( it != gs_FontFamilyToPSName.end() )
+@@ -589,6 +594,7 @@
+                 m_info.UpdateNamesMap(m_info.m_faceName, m_ctFont);
+ #endif
+             }
++#endif
+             
+             if ( m_ctFont.get() == NULL )
+             {

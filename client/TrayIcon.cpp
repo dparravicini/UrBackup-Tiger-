@@ -23,6 +23,9 @@
 #include "capa_bits.h"
 #include "Status.h"
 #include "stringtools.h"
+#ifdef __WXOSX_CARBON__
+#include "osxtray.h"
+#endif
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -61,10 +64,18 @@ extern wxString ico_ext;
 extern wxBitmapType ico_type;
 extern std::string g_res_path;
 
+#ifdef __WXOSX_CARBON__
+static void tigerTrayClicked(void* ctx);
+#endif
+
 TrayIcon::TrayIcon(void)
 	: wxTaskBarIcon()
 {
 	balloon_action=0;
+#ifdef __WXOSX_CARBON__
+	tiger_tray=NULL;
+	tiger_tray=tiger_tray_create(&tigerTrayClicked, this);
+#endif
 #ifdef wxUSE_TASKBARICON_BALLOONS
 	Connect(wxEVT_TASKBAR_BALLOON_CLICK, (wxObjectEventFunction)&TrayIcon::OnBalloonClick, NULL, this);
 #endif
@@ -72,6 +83,52 @@ TrayIcon::TrayIcon(void)
 	Connect(wxEVT_TASKBAR_LEFT_UP, (wxObjectEventFunction)&TrayIcon::OnClick, NULL, this);
 #endif
 }
+
+#ifdef __WXOSX_CARBON__
+static void tigerTrayClicked(void* ctx)
+{
+	TrayIcon* self=(TrayIcon*)ctx;
+	wxWindow* win=(wxTheApp!=NULL)?wxTheApp->GetTopWindow():NULL;
+	wxMenu* mnu=self->CreatePopupMenu();
+	if(mnu!=NULL)
+	{
+		if(win!=NULL)
+		{
+			win->PopupMenu(mnu);
+		}
+		delete mnu;
+	}
+}
+
+TrayIcon::~TrayIcon(void)
+{
+	if(tiger_tray!=NULL)
+	{
+		tiger_tray_destroy(tiger_tray);
+		tiger_tray=NULL;
+	}
+}
+
+bool TrayIcon::SetIcon(const wxIcon& icon, const wxString& tooltip)
+{
+	if(tiger_tray!=NULL)
+	{
+		tiger_tray_set_icon(tiger_tray, icon, tooltip);
+		return true;
+	}
+	return wxTaskBarIcon::SetIcon(icon, tooltip);
+}
+
+bool TrayIcon::RemoveIcon(void)
+{
+	if(tiger_tray!=NULL)
+	{
+		tiger_tray_remove(tiger_tray);
+		return true;
+	}
+	return wxTaskBarIcon::RemoveIcon();
+}
+#endif
 
 #ifdef _WIN32
 void runCommand(std::string cmd, std::string arg1)

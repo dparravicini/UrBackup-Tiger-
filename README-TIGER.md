@@ -12,10 +12,12 @@ Client UrBackup nativo per Mac OS X 10.4.11 PPC, basato su 2.0.34client.
 
 Il frontend ufficiale `uroni/urbackup_frontend_wx` 2.0.34 è importato in
 `client/`. La GUI wx Carbon è compilata staticamente per PowerPC, impacchettata
-e installata nel prefisso di laboratorio; l'icona nella menu bar e le finestre
-non sono ancora verificate perché richiedono una sessione grafica attiva sul
-G4. Il dettaglio aggiornato e il punto di ripresa sono in
-`docs/tiger/gui.md`.
+e installata nel prefisso di laboratorio. Sul G4 l'icona originale è stata
+verificata nella barra dei menu e il menu contestuale si apre. La voce `Infos`
+ha però rivelato un crash CoreText nella creazione dei campi di testo; la
+correzione Tiger è compilata ma non ancora installata e ritestata. Non è
+quindi un punto chiuso. Il dettaglio, i crash log e un prompt di ripresa
+pronto per un'altra sessione sono in `docs/tiger/gui.md`.
 
 Usa Vintage-DevKit separato, senza modificarlo. Sulla Freebox:
 ```

@@ -26,6 +26,11 @@ class TrayIcon : public wxTaskBarIcon
 {
 public:
 	TrayIcon(void);
+#ifdef __WXOSX_CARBON__
+	~TrayIcon(void);
+	bool SetIcon(const wxIcon& icon, const wxString& tooltip);
+	bool RemoveIcon(void);
+#endif
 	wxMenu* CreatePopupMenu(void);
 	void OnPopupClick(wxCommandEvent &evt);
 	void OnClick(wxCommandEvent &evt);
@@ -36,6 +41,9 @@ public:
 	static void accessBackups(wxString path);
 
 private:
+#ifdef __WXOSX_CARBON__
+	void* tiger_tray;
+#endif
 	int balloon_action;
 	std::string new_ident;
 };

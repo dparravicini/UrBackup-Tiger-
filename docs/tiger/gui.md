@@ -63,7 +63,8 @@ Configurazione usata:
 
 `tiger/deps/wx-3.0.5.1-tiger-10.4.patch` è stato rigenerato per diff diretto
 contro il tarball ufficiale `wxWidgets-3.0.5.1.tar.bz2`: 741 righe, 18 file.
-Copre:
+Va applicata anche `tiger/deps/wx-3.0.5.1-tiger-uifont.patch`, che contiene la
+correzione CoreText finale. Insieme coprono:
 
 - `AudioServices` e `HIWindowGetAvailablePositioningBounds`, assenti
   nell'SDK 10.4 (`utils.cpp`, `utils_osx.cpp`, `nonownedwnd.cpp`);
@@ -77,7 +78,9 @@ Copre:
 - shim CoreText per `CTFontCreateWithName`, `CTFontCreateWithFontDescriptor`,
   `CTFontCreateCopyWithAttributes`, `CTFontGetSymbolicTraits`,
   `CTFontGetStringEncoding`, `CTFontUIFontType` e `kCTFontMonoSpaceTrait`
-  (`font.cpp`, `core/fontenum.cpp`);
+  (`font.cpp`, `core/fontenum.cpp`); su Tiger `MacFindFont` usa direttamente
+  il font UI Carbon e non i descrittori CoreText 1.0.4, che causavano
+  `EXC_BAD_ACCESS` alla creazione delle finestre con campi di testo;
 - costanti `kCGBlendMode*` assenti in 10.4; `kCGBlendModePlusLighter` vale
   **27** (il valore 26 è `kCGBlendModePlusDarker`, usato per errore nella
   prima build del 2026-10-28 e corretto in questa sessione) (`graphics.cpp`);
@@ -119,7 +122,7 @@ Risultati verificati:
 - backend di laboratorio riavviato con
   `--daemon --pidfile ... --logfile ... --restore client-confirms`.
 
-## Verifica visiva: ancora aperta
+## Prima verifica visiva: sessione Aqua assente
 
 La verifica dell'icona nella menu bar e delle finestre originali non è stata
 eseguita. Dopo il riavvio del G4 `/dev/console` appartiene a `root`, cioè la
@@ -136,7 +139,7 @@ invece gli asset originali `client/data/*.ico`. Il bundle non deve essere
 presentato come dotato di una nuova icona applicativa: l'eventuale icona
 Finder resta un limite da verificare senza modifiche estetiche.
 
-## Prossimi passi
+## Prossimi passi originali (superati dalla sezione finale)
 
 1. Login grafico di `daniele` sul G4 con il display acceso.
 2. Avviare `/Volumes/Daniele/Library/UrBackupTigerLab/Applications/UrBackup
@@ -201,3 +204,106 @@ momento il requisito "icona nella menu bar" resta **non soddisfatto**.
 Rimuovere `LSUIElement` dal bundle: l'icona del tray comparirebbe nel Dock
 con il menu funzionante (implementazione dock di wx Carbon). Non è la menu
 bar e cambia il comportamento originale, quindi non è stata applicata.
+
+## Stato reale al 2026-10-28 17:45 (ultima sessione)
+
+### Verificato sul G4
+
+- Il G4 è raggiungibile, `daniele` ha una sessione console attiva e
+  `screencapture` funziona.
+- È stato implementato lo status item nativo Tiger in `client/osxtray.h` e
+  nella parte Objective-C++ aggiunta a `client/osxutils.mm`; `TrayIcon` usa
+  `NSStatusItem` solo su `__WXOSX_CARBON__` e conserva il menu wx originale.
+- L'icona originale `backup-ok.ico` è stata vista realmente nella barra dei
+  menu alle coordinate circa `(645,14)` a 1024x768, con il bundle
+  `LSUIElement=1` (quindi niente Dock).
+- Il click manuale dell'utente apre il menu originale. Il processo tray resta
+  vivo finché non viene selezionata la voce `Infos`.
+- Il primo crash `+[NSThread mainThread]: selector not recognized` è stato
+  corretto eliminando quel controllo, non disponibile su Tiger.
+
+### Problema ancora aperto
+
+La voce `Infos` chiude la GUI. Il crash log del PID 14021, ore 17:34:47, è:
+
+```text
+EXC_BAD_ACCESS at 0x00000065
+CoreText TFont::SetMatrix
+CTFontCreateWithName
+wxFontRefData::MacFindFont (font.cpp)
+wxMacMLTEControl::TXNSetAttribute
+GUIInfo::GUIInfo (GUI.cpp:629)
+Info::Info (Info.cpp:35)
+TrayIcon::OnPopupClick
+```
+
+La causa è compatibilità del font, non il tray e non il backend. Una prima
+correzione limitata al solo nome famiglia vuoto è stata compilata e provata:
+il crash si è ripetuto più avanti, sempre in `CTFontCreateWithName`. Il PID
+14203 ha mostrato lo stesso percorso aprendo `settings`.
+
+### Correzione preparata ma non validata
+
+In `src/osx/carbon/font.cpp` il ramo Tiger di `wxFontRefData::MacFindFont` è
+stato cambiato per usare direttamente il font UI Carbon:
+
+```cpp
+m_ctFont.reset(CTFontCreateUIFontForLanguage(
+    kCTFontSystemFontType, m_info.m_pointSize, NULL));
+```
+
+La patch riproducibile è `tiger/deps/wx-3.0.5.1-tiger-uifont.patch` e va
+applicata dopo la patch principale wx. La libreria wx è stata ricompilata e la
+GUI ricollegata nella snapshot di build, ma il binario corretto **non è stato
+ancora installato nel bundle di laboratorio** e `Infos` non è stato ritestato.
+Non dichiarare quindi risolto questo punto.
+
+### Packaging e `/Applications`
+
+L'ultimo package installato è `UrBackupTiger-2.0.34-ppc.tar.gz` delle 17:13,
+che contiene la correzione tray ma non l'ultima correzione font. Non è ancora
+stato prodotto un artefatto pubblicabile definitivo. L'app di laboratorio è in
+`/Volumes/Daniele/Library/UrBackupTigerLab/Applications/UrBackup Client.app`;
+la copia in `/Applications` richiesta dall'utente non è stata eseguita perché
+la verifica funzionale è incompleta.
+
+## Prompt di ripresa per un'altra sessione
+
+```text
+Riprendi il porting GUI di UrBackup Tiger nel repository
+/home/freebox/ports/urbackup-tiger del server 192.168.1.83.
+
+Leggi docs/tiger/gui.md, il commit 136355a6 e i file client/TrayIcon.*,
+client/osxtray.h, client/osxutils.mm. Non rifare l'analisi iniziale.
+
+Stato: icona NSStatusItem verificata sul G4 e menu aperto; il crash di
++[NSThread mainThread] è corretto. La voce Infos chiude la GUI per un crash
+CoreText in wxFontRefData::MacFindFont. La correzione Tiger usa
+CTFontCreateUIFontForLanguage ed è già applicata al sorgente wx sul G4 e in
+tiger/deps/wx-3.0.5.1-tiger-uifont.patch, ma il bundle installato non la
+contiene ancora.
+
+Accesso: ssh root@192.168.1.83, poi ssh tiger (192.168.1.53, utente daniele).
+Build: /Volumes/Daniele/Projects/.tiger-devkit/builds/
+urbackup-tiger-2.0.34/20261027T223940Z-4fab49b97b/src.
+wx build: /Volumes/Daniele/Projects/.tiger-devkit/deps/wxWidgets-3.0.5.1/
+build-carbon-ppc-nogl, prefisso wx-3.0.5.1-carbon-ppc.
+Laboratorio: /Volumes/Daniele/Library/UrBackupTigerLab.
+
+Procedura esatta:
+1. verificare ssh root@192.168.1.83 e poi ssh tiger uname -a;
+2. verificare che la wx installata contenga la patch uifont e ricompilare solo
+   font.cpp con make -j2 && make install nel build-carbon-ppc-nogl;
+3. ricollegare urbackupclientgui, copiare il binario nel bundle di
+   laboratorio e avviarlo senza toccare il backend;
+4. aprire realmente Infos e verificare che resti aperto, poi Settings, Logs,
+   click tray, stati backup-ok/progress/no-server;
+5. solo dopo il PASS eseguire tiger/package.sh, install.sh e self-test;
+6. creare un pacchetto distribuibile e, se richiesto, copiare il bundle in
+   /Applications senza sovrascrivere installazioni estranee;
+7. aggiornare questo documento con risultati reali, commit e push su Gitea.
+
+Non dichiarare “Infos risolto” senza un click reale sul G4. Non modificare il
+profilo Disabled: le frequenze -86400 sono intenzionali. Non cancellare backup
+o dati personali.
+```

@@ -131,3 +131,162 @@ extern "C" void remove_login_item()
 }
 
 #endif
+
+/* ------------------------------------------------------------------
+ * Tiger menu bar status item.
+ *
+ * wxWidgets 3.0 Carbon implements wxTaskBarIcon on top of the
+ * application dock tile only (wxTBI_DOCK), so the original UrBackup
+ * tray had no place to appear on Mac OS X 10.4. NSStatusItem exists
+ * since 10.1, so the same original icons are shown in the menu bar
+ * through it and the click is forwarded to the existing wx menu.
+ * ------------------------------------------------------------------ */
+
+#ifdef __WXOSX_CARBON__
+
+#include <wx/icon.h>
+#include <wx/image.h>
+#include <wx/bitmap.h>
+#include <wx/string.h>
+#include "TrayIcon.h"
+#include "osxtray.h"
+
+@interface TigerTrayTarget : NSObject
+{
+@public
+	TigerTrayClickFn _fn;
+	void* _ctx;
+	NSStatusItem* _item;
+}
+- (void)clicked:(id)sender;
+@end
+
+@implementation TigerTrayTarget
+- (void)clicked:(id)sender
+{
+	if(_fn!=NULL)
+	{
+		_fn(_ctx);
+	}
+}
+@end
+
+static NSImage* tigerImageFromIcon(const wxIcon& icon)
+{
+	wxBitmap bmp(icon);
+	if(!bmp.IsOk())
+	{
+		return nil;
+	}
+	wxImage img=bmp.ConvertToImage();
+	if(!img.IsOk())
+	{
+		return nil;
+	}
+	const int w=img.GetWidth();
+	const int h=img.GetHeight();
+	const bool alpha=img.HasAlpha()!=0;
+	const int spp=alpha?4:3;
+	NSBitmapImageRep* rep=[[NSBitmapImageRep alloc]
+		initWithBitmapDataPlanes:NULL pixelsWide:w pixelsHigh:h bitsPerSample:8
+		samplesPerPixel:spp hasAlpha:alpha isPlanar:NO
+		colorSpaceName:NSDeviceRGBColorSpace bytesPerRow:0 bitsPerPixel:0];
+	if(rep==nil)
+	{
+		return nil;
+	}
+	unsigned char* dst=[rep bitmapData];
+	const int stride=[rep bytesPerRow];
+	const unsigned char* rgb=img.GetData();
+	const unsigned char* alp=alpha?img.GetAlpha():NULL;
+	for(int y=0;y<h;y++)
+	{
+		unsigned char* row=dst+y*stride;
+		for(int x=0;x<w;x++)
+		{
+			const int sb=(y*w+x)*3;
+			const int db=x*spp;
+			row[db+0]=rgb[sb+0];
+			row[db+1]=rgb[sb+1];
+			row[db+2]=rgb[sb+2];
+			if(alpha)
+			{
+				row[db+3]=alp[y*w+x];
+			}
+		}
+	}
+	NSImage* result=[[NSImage alloc] initWithSize:NSMakeSize(w,h)];
+	[result addRepresentation:rep];
+	[rep release];
+	return result;
+}
+
+void* tiger_tray_create(TigerTrayClickFn fn, void* ctx)
+{
+	TigerTrayTarget* target=[[TigerTrayTarget alloc] init];
+	target->_fn=fn;
+	target->_ctx=ctx;
+	NSStatusItem* item=[[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
+	if(item==nil)
+	{
+		[target release];
+		return NULL;
+	}
+	[item retain];
+	target->_item=item;
+	[item setTarget:target];
+	[item setAction:@selector(clicked:)];
+	[item setHighlightMode:YES];
+	return target;
+}
+
+void tiger_tray_set_icon(void* handle, const wxIcon& icon, const wxString& tooltip)
+{
+	TigerTrayTarget* target=(TigerTrayTarget*)handle;
+	if(target==NULL)
+	{
+		return;
+	}
+	NSImage* img=tigerImageFromIcon(icon);
+	if(img!=nil)
+	{
+		[img setScalesWhenResized:YES];
+		[img setSize:NSMakeSize(18,18)];
+		[target->_item setImage:img];
+		[img release];
+	}
+	if(!tooltip.empty())
+	{
+		wxCharBuffer utf8=tooltip.utf8_str();
+		NSString* text=[NSString stringWithUTF8String:utf8.data()];
+		if([target->_item respondsToSelector:@selector(setToolTip:)])
+		{
+			[target->_item performSelector:@selector(setToolTip:) withObject:text];
+		}
+	}
+}
+
+void tiger_tray_remove(void* handle)
+{
+	TigerTrayTarget* target=(TigerTrayTarget*)handle;
+	if(target==NULL)
+	{
+		return;
+	}
+	[target->_item setImage:nil];
+}
+
+void tiger_tray_destroy(void* handle)
+{
+	TigerTrayTarget* target=(TigerTrayTarget*)handle;
+	if(target==NULL)
+	{
+		return;
+	}
+	[[NSStatusBar systemStatusBar] removeStatusItem:target->_item];
+	[target->_item release];
+	target->_item=nil;
+	[target release];
+}
+
+#endif
