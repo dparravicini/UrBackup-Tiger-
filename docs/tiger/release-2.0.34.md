@@ -42,10 +42,18 @@ Il bundle `UrBackupTiger-2.0.34-ppc-en.zip` (16 MB) contiene:
 
 ## Pubblicazione esterna
 
-Il link Gitea e' raggiungibile solo dalla LAN. Per inviarlo alle liste
-retrocomputing serve un URL pubblico: caricare lo zip su Macintosh Garden,
-Macintosh Repository, archive.org, Google Drive o un altro host stabile e
-sostituire `[REPLACE WITH THE DOWNLOAD URL]` in `ANNOUNCEMENT.txt`.
+La release pubblica e' su GitHub:
+
+- pagina: https://github.com/dparravicini/UrBackup-Tiger-/releases/tag/v2.0.34-tiger1
+- asset: `UrBackupTiger-2.0.34-ppc-en.zip`, `UrBackupTiger-2.0.34-ppc.dmg`,
+  `UrBackupTiger-2.0.34-ppc.tar.gz`, `urbackup-tiger-2.0.34-ppc-src.tar.gz`,
+  `SHA256SUMS`
+- SHA-256 dello zip: `1aa0cfeba5daa10070de0d386b379e929be68f171eab62722464a9d3af5512cb`
+
+Il repository Gitea resta privato e non e' il link da inviare alle liste.
+`ANNOUNCEMENT.txt` contiene gia' l'URL pubblico. Le note tecniche italiane
+restano in `README-TIGER.md`; la pagina principale del repository e' il
+`README.md` inglese.
 
 Il messaggio e la scelta dei destinatari sono in
 [mailing-list-message.md](mailing-list-message.md). Non allegare il DMG o lo

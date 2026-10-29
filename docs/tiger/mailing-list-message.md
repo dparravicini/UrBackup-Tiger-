@@ -114,10 +114,10 @@ Known limitations:
   through Settings, Paths and Logs.
 
 Download:
-<URL>
+https://github.com/dparravicini/UrBackup-Tiger-/releases/tag/v2.0.34-tiger1
 
 SHA-256:
-<CHECKSUM>
+1aa0cfeba5daa10070de0d386b379e929be68f171eab62722464a9d3af5512cb
 
 The download contains the DMG, a tar.gz archive, this README, the license
 files and a source snapshot. UrBackup is AGPLv3-or-later.
@@ -146,7 +146,7 @@ full/incremental file backups, restore with HFS+ resource forks, FinderInfo
 and xattrs. Tested on an iBook G4. Image backups are not supported; symlink
 timestamps cannot be set by Darwin 8; the menu-bar status item is
 session-dependent. DMG, tar.gz, source snapshot and checksums:
-<URL>
+https://github.com/dparravicini/UrBackup-Tiger-/releases/tag/v2.0.34-tiger1
 
 Feedback and test reports welcome.
 ```
