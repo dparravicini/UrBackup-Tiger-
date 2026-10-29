@@ -75,6 +75,7 @@ il DMG con `hdiutil verify`.
 
 - [Analisi, architettura e limiti](docs/tiger/analisi.md)
 - [Porting GUI wx e verifiche Tiger](docs/tiger/gui.md)
+- [Lezioni apprese e checklist per un nuovo porting Tiger](docs/tiger/porting-lessons.md)
 - [Valutazione macTLS e macsurf](docs/tiger/mactls.md)
 - `tiger/probes`: profilo macTLS e resource fork.
 - `tiger/build.sh`: build GCC 4.0.1 con SDK 10.4u.

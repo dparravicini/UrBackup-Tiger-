@@ -8,6 +8,9 @@ stati importati in `client/` senza la cronologia Git del repository originale
 (175 file, circa 5,3 MiB). Il backend di riferimento resta il tag ufficiale
 `2.0.34client`, commit `8cd27193b8370df739ad08c6f72750ebe3c7fe11`.
 
+La checklist riutilizzabile per un altro porting Tiger e' in
+[Lezioni apprese](porting-lessons.md).
+
 L'obiettivo è compilare il tray wx originale su Mac OS X 10.4 PPC, conservando
 icone, voci di menu, finestre, traduzioni e stati. Non sono stati creati nuovi
 asset o una nuova interfaccia.
