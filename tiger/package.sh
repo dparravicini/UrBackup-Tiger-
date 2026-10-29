@@ -58,42 +58,47 @@ fi
 ln -s /Applications "$stage/Applications"
 cp COPYING "$stage/URBACKUP-COPYING.txt"
 cp cryptoplugin/CRYPTOPP-LICENSE.txt "$stage/CRYPTOPP-LICENSE.txt"
-cp README-TIGER.md "$stage/README-TIGER.md"
-cat > "$stage/Leggimi.txt" <<'EOF'
+cp README-TIGER-EN.md "$stage/README.md"
+cat > "$stage/ReadMe.txt" <<'EOF'
 UrBackup Client Tiger 2.0.34 (PowerPC)
 
-Requisiti
-- Mac OS X 10.4.11 su PowerPC.
+Requirements
+- Mac OS X 10.4.11 on a PowerPC Mac.
+- An UrBackup 2.x server reachable over the network.
 
-Installazione
-1. Trascinare "UrBackup Client" nella cartella Applicazioni.
-2. Avviarlo da Applicazioni. Il backend parte automaticamente.
-3. Nella sessione Tiger di verifica l'icona nel Dock e lo status item non sono
-   stati visibili. Aprire Impostazioni e Percorsi con i comandi indicati sotto.
+Installation
+1. Drag "UrBackup Client" to the Applications folder.
+2. Launch it from Applications. The client backend starts automatically.
+3. Open Settings and configure the server, then add the folders you want to
+   back up.
 
-Dati e configurazione
-Ogni utente ha dati separati in:
-  ~/Library/Application Support/UrBackupTiger
-Il pacchetto non contiene server, credenziali o dati personali. Il server
-UrBackup va configurato nelle Impostazioni del client.
-
-Impostazioni e configurazione delle cartelle
-Aprire Impostazioni con:
+Settings and backup paths
+Open Settings with:
   "/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" settings
 
-La GUI usa l'inserimento del percorso completo (es. /etc), perche' il
-selettore directory nativo di Tiger puo' chiudere inaspettatamente
-l'applicazione. Aprire:
+The GUI asks for a full absolute path (for example /Users/you/Documents)
+instead of opening the native Tiger folder picker, because NavigationServices
+can terminate the application on Tiger. Open the path editor with:
   "/Applications/UrBackup Client.app/Contents/MacOS/urbackupclientgui" paths
-Selezionare "Aggiungi percorso", digitare il percorso assoluto e premere OK.
 
-Rimozione
-1. Chiudere UrBackup e il relativo processo backend.
-2. Eliminare l'applicazione da Applicazioni.
-3. Se si vogliono eliminare anche configurazione e stato locali, eliminare
+Data and configuration
+Each user has separate data in:
+  ~/Library/Application Support/UrBackupTiger
+The package contains no server, credentials or personal data. Configure the
+UrBackup server in the client Settings window.
+
+Menu bar and Dock
+The original tray menu is implemented with a native NSStatusItem. On some
+Tiger sessions SystemUIServer does not display status items; if the icon is
+not visible, use the settings, paths and logs commands above.
+
+Uninstall
+1. Quit UrBackup from its menu, or stop the backend process.
+2. Remove the application from Applications.
+3. To remove local configuration and state as well, delete
    ~/Library/Application Support/UrBackupTiger.
 
-Licenza: GNU AGPL v3 o successiva. Vedere URBACKUP-COPYING.txt.
+License: GNU AGPL v3 or later. See URBACKUP-COPYING.txt.
 EOF
 
 "$resources/bin/urbackupclientbackend" --tiger-self-test
@@ -105,4 +110,4 @@ rm -f "$dmg"
 /usr/bin/hdiutil create -volname "UrBackup Tiger $version" -srcfolder "$stage" \
 	-ov -format UDZO "$dmg"
 /usr/bin/hdiutil verify "$dmg"
-/usr/bin/tar -czf "UrBackupTiger-${version}-ppc.tar.gz" -C package "UrBackupTiger"
+/usr/bin/tar -czf "UrBackupTiger-${version}-ppc.tar.gz" -C "$stage" .
