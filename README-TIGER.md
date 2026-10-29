@@ -10,6 +10,8 @@ La documentazione per la distribuzione pubblica e' in
 retrocomputing e' in
 [docs/tiger/mailing-list-message.md](docs/tiger/mailing-list-message.md).
 `tiger/package.sh` include il README inglese e un `ReadMe.txt` nel DMG.
+Il bundle pubblicato e i checksum sono descritti in
+[docs/tiger/release-2.0.34.md](docs/tiger/release-2.0.34.md).
 
 ## Stato
 
