@@ -44,15 +44,10 @@ if [ -x /Developer/Tools/SetFile ]; then
 	/Developer/Tools/SetFile -a B "$app"
 fi
 
-# The upstream .icns is a placeholder. Derive a real Tiger icon from the
-# original UrBackup status asset already shipped by the frontend.
-if /usr/bin/sips -s format png client/data/backup-ok.ico --out "$out/icon.png" >/dev/null 2>&1 \
-	&& /usr/bin/sips -s format icns "$out/icon.png" --out "$resources/urbackup.icns" >/dev/null 2>&1
-then
-	rm -f "$out/icon.png"
-else
-	cp osx_installer/urbackup.icns "$resources/urbackup.icns"
-fi
+# The upstream .icns is a text placeholder and Tiger's sips cannot write
+# ICNS. Ship an ICNS generated from the original backup-ok.ico with the
+# legacy is32/il32/ih32/it32 elements supported by Mac OS X 10.4.
+cp osx_installer/urbackup.icns "$resources/urbackup.icns"
 
 mkdir -p "$stage"
 cp -R "$app" "$stage/"

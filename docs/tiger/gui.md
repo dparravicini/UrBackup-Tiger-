@@ -136,13 +136,19 @@ qualunque processo grafico non può comparire nella barra dei menu. Serve un
 login grafico dell'utente `daniele` sul monitor del G4 prima di poter
 dichiarare riuscito questo punto.
 
-## Nota sull'icona del bundle
+## Icona del bundle
 
 `osx_installer/urbackup.icns` nel sorgente ufficiale è un file di istruzioni
-testuale di 720 byte, non un ICNS valido. Le icone di stato usate dal tray sono
-invece gli asset originali `client/data/*.ico`. Il bundle non deve essere
-presentato come dotato di una nuova icona applicativa: l'eventuale icona
-Finder resta un limite da verificare senza modifiche estetiche.
+testuale di 720 byte, non un ICNS valido. Il bundle finale usa invece un ICNS
+generato dall'asset originale `client/data/backup-ok.ico` con gli elementi
+legacy `is32`, `il32`, `ih32` e `it32`, necessari per la compatibilità con
+Mac OS X 10.4. Dopo l'installazione e il riavvio di Finder, sul G4 l'app
+mostra il cilindro UrBackup al posto dell'icona generica.
+
+Il formato moderno creato da `iconutil` non viene riconosciuto da Tiger: il
+file viene visto come `data` e non mostra l'icona. Anche `sips` di Tiger non
+supporta la scrittura ICNS. La verifica corretta richiede quindi un ICNS con
+gli elementi legacy e un refresh di LaunchServices/Finder.
 
 ## Prossimi passi originali (superati dalla sezione finale)
 
@@ -252,6 +258,8 @@ Sono stati verificati:
   bundle bit Tiger rifiuta l'apertura con LaunchServices `-10829`;
 - rimosso `LSUIElement` dal bundle per consentire l'avvio come applicazione
   normale; l'icona nel Dock non è però comparsa nella sessione di prova;
+- sostituito l'ICNS segnaposto con un'icona UrBackup legacy compatibile con
+  Tiger e verificata in Finder;
 - tray implementato con `NSStatusItem` e caricamento diretto dell'ICO in
   `NSBitmapImageRep` RGBA, per conservare alpha e trasparenza.
 

@@ -14,6 +14,9 @@ Backend, CLI e GUI wx sono Mach-O PowerPC e vengono eseguiti sul G4.
   Il selettore nativo Tiger non viene usato perche' `NavigationServices`
   provoca un crash; la GUI chiede il percorso completo della cartella.
 - Log e Infos: aperti senza il crash CoreText osservato nelle prime build.
+- Icona applicativa: ICNS Tiger valido ricavato dall'asset UrBackup
+  `backup-ok.ico`; Finder mostra il cilindro UrBackup al posto dell'icona
+  generica. Verificato sul G4 dopo il riavvio di Finder.
 - Backup di `/etc`: verificato completo sul server. Il client esclude soltanto
   i file root-only non leggibili dall'utente `daniele`, come descritto in
   `docs/tiger/gui.md`.
