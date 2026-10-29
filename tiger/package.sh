@@ -58,7 +58,7 @@ fi
 ln -s /Applications "$stage/Applications"
 cp COPYING "$stage/URBACKUP-COPYING.txt"
 cp cryptoplugin/CRYPTOPP-LICENSE.txt "$stage/CRYPTOPP-LICENSE.txt"
-cp README-TIGER-EN.md "$stage/README.md"
+cp README.md "$stage/README.md"
 cat > "$stage/ReadMe.txt" <<'EOF'
 UrBackup Client Tiger 2.0.34 (PowerPC)
 

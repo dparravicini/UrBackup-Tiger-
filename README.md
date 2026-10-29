@@ -9,6 +9,13 @@ This is a native PowerPC build of the official UrBackup 2.0.34 client and its or
 
 The port was developed and tested on a real iBook G4 running Mac OS X 10.4.11. The backend, command-line client and GUI are all 32-bit PowerPC Mach-O executables. No Intel code, Rosetta, or modern macOS component is required.
 
+## Download
+
+- GitHub release: <https://github.com/dparravicini/UrBackup-Tiger-/releases/tag/v2.0.34-tiger1>
+- Recommended asset: `UrBackupTiger-2.0.34-ppc-en.zip` (DMG, tar.gz, source snapshot, checksums and licenses)
+
+Italian engineering notes are kept in [README-TIGER.md](README-TIGER.md) and `docs/tiger/`; they are not needed to install or use the client.
+
 ## What works
 
 - Native PowerPC client for UrBackup 2.x servers.

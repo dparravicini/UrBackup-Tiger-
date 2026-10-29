@@ -3,10 +3,10 @@
 Client UrBackup nativo per Mac OS X 10.4.11 PowerPC, basato su 2.0.34client.
 Backend, CLI e GUI wx sono Mach-O PowerPC e vengono eseguiti sul G4.
 
-## Release in inglese
+## Documentazione in inglese
 
-La documentazione per la distribuzione pubblica e' in
-[README-TIGER-EN.md](README-TIGER-EN.md). Il messaggio per le liste e i forum
+La documentazione pubblica in inglese e' in [README.md](README.md). Questa
+pagina resta la documentazione tecnica in italiano. Il messaggio per le liste e i forum
 retrocomputing e' in
 [docs/tiger/mailing-list-message.md](docs/tiger/mailing-list-message.md).
 `tiger/package.sh` include il README inglese e un `ReadMe.txt` nel DMG.
