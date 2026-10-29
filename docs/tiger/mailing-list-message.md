@@ -58,12 +58,14 @@ Not mailing lists, but the right permanent archives for a Tiger software
 release. Upload the DMG and the source snapshot with a short description and a
 link to the project page. This is what people will find years from now.
 
-### 7. UrBackup community forum
+### 7. UrBackup community forum (optional)
 
 <https://forums.urbackup.org/>
 
-Announce the client port in the UrBackup community as well. This is where
-server users will ask about protocol compatibility and restore behavior.
+Registration currently requires an invite code, so this is optional: post
+only if you already have an account or receive an invite. The public GitHub
+release already makes the port discoverable to UrBackup users who search for
+a Tiger/macOS client.
 
 ## What not to do
 
